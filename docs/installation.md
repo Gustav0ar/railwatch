@@ -53,6 +53,8 @@ When migrating the earlier development installation to Railwatch, stop the old d
 
 The daemon state belongs in `/var/lib/railwatch`, and desktop notification state belongs in `$XDG_STATE_HOME/railwatch`. Update service accounts, groups, udev ownership, desktop entries and Noctalia widget IDs together. The new API is `io.github.railwatch.Monitor1`; all clients and the daemon must use the renamed build. Replace the plugin ID in both default and monitor-specific bar lists.
 
+During an Arch migration, remove the old package before installing its replacement after stopping services and backing up state. Otherwise the systemd-sysusers package hook can recreate the old account while the old sysusers definition is still installed. Preserve existing numeric group IDs when renaming groups to keep current-session socket access.
+
 SQLite uses WAL and `synchronous=FULL`. Every accepted sample commits; a separate bounded queue prevents slow storage from blocking live monitoring. Queue overflow is visible and does not invent missing energy. Raw samples are pruned after 48 hours in batches. Minute energy and incident evidence remain retained.
 
 In-memory limits are explicit: 16 storage messages, 256 pending incident updates, 2,048 pending evidence readings and 32 concurrent evidence windows. A long disk outage or alarm storm can exceed them. The daemon reports lost updates, lost evidence and shortened windows rather than letting memory grow indefinitely. Desktop incidents observed together share one notification and tone. Notification delivery deduplication retains at most 4,096 entries.

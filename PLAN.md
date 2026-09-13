@@ -1,6 +1,6 @@
 # Railwatch Linux implementation plan
 
-> Implementation status, 2026-09-13: the monitoring stack is implemented and the original development package is installed. The source is now named Railwatch and is public at [Gustav0ar/railwatch](https://github.com/Gustav0ar/railwatch). Protocol decoding, userspace hardware access, shared core and the service client are independent crates; see [architecture](docs/architecture.md). The installed name migration awaits administrator authentication. See [validation](docs/validation.md) for the Ai1600TS hardware runs, resource measurements and actual Noctalia/GUI interaction. Remaining hardware control qualification, releases and kernel work are separate milestones.
+> Implementation status, 2026-09-13: the Railwatch monitoring stack is implemented, with source public at [Gustav0ar/railwatch](https://github.com/Gustav0ar/railwatch). Protocol decoding, userspace hardware access, shared core and the service client are independent crates; see [architecture](docs/architecture.md). See [installation](docs/installation.md) for deployment and migration. Remaining hardware control qualification, releases and kernel work are separate milestones.
 
 
 Prepared on 2026-09-12 from the archived Windows analysis, Linux prototypes, Windows screenshots, local WireView projects, and current upstream documentation.
