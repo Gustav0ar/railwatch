@@ -1,7 +1,7 @@
 # Build from a release source archive; no installation is performed by this repository.
 pkgname=railwatch
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Railwatch telemetry, incidents and electricity costs'
 arch=('x86_64' 'aarch64')
 license=('GPL-2.0-or-later')
@@ -19,7 +19,7 @@ build() {
 }
 check() {
   cd "$srcdir/railwatch-$pkgver"
-  cargo test --release --locked
+  cargo test --workspace --release --locked
   cargo test --release --locked --manifest-path clients/gui/Cargo.toml
 }
 package() {
@@ -34,7 +34,7 @@ package() {
   install -Dm644 packaging/railwatch.sysusers "$pkgdir/usr/lib/sysusers.d/railwatch.conf"
   install -Dm644 README.md "$pkgdir/usr/share/doc/railwatch/README.md"
   install -Dm644 docs/installation.md "$pkgdir/usr/share/doc/railwatch/installation.md"
-  install -Dm644 interfaces/io.github.railwatch.Monitor1.varlink "$pkgdir/usr/share/varlink/interfaces/io.github.railwatch.Monitor1.varlink"
+  install -Dm644 crates/client/interfaces/io.github.railwatch.Monitor1.varlink "$pkgdir/usr/share/varlink/interfaces/io.github.railwatch.Monitor1.varlink"
   install -d "$pkgdir/usr/share/railwatch/noctalia"
   cp -r clients/noctalia/catalog.toml clients/noctalia/railwatch "$pkgdir/usr/share/railwatch/noctalia/"
 }

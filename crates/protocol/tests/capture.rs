@@ -1,7 +1,4 @@
-use railwatch::{
-    model::Family,
-    protocol::{READ, decode_safeguards, decode_telemetry, response},
-};
+use railwatch_protocol::{READ, decode_ts_safeguards, decode_ts_telemetry, response};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 #[derive(Deserialize)]
@@ -10,15 +7,16 @@ struct Fixture {
 }
 #[test]
 fn captured_linux_ai1600ts_report_decodes() {
-    let f: Fixture = serde_json::from_str(include_str!("../fixtures/ai1600ts-linux.json")).unwrap();
-    let t = decode_telemetry(&f.reports["e0"], Family::Ts).unwrap();
+    let f: Fixture =
+        serde_json::from_str(include_str!("../../../fixtures/ai1600ts-linux.json")).unwrap();
+    let t = decode_ts_telemetry(&f.reports["e0"]).unwrap();
     assert_eq!(t.power_uw, 180_000_000);
     assert_eq!(t.efficiency_millipercent, 81625);
     assert_eq!(t.temperature_mc, 57000);
-    assert_eq!(t.fan.rpm, 0);
+    assert_eq!(t.fan_rpm, 0);
     assert_eq!(t.connector_currents_ma[0], [0; 6]);
     assert_eq!(t.connector_currents_ma[1], [375, 375, 375, 375, 375, 437]);
-    let snapshots = decode_safeguards(&f.reports["c1"]).unwrap();
+    let snapshots = decode_ts_safeguards(&f.reports["c1"]).unwrap();
     assert_eq!(snapshots.len(), 2);
     assert!(snapshots.iter().all(|s| s.status_raw == 0));
     assert_eq!(

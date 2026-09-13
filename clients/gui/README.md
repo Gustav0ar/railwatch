@@ -6,4 +6,4 @@ The UI uses true black, white text, two six-conductor views, calendar energy que
 
 `--page 0..4` selects Overview, Energy & cost, Incidents, Cooling or Device. `--incident ID` opens retained incident evidence. `--screenshot OUTPUT.ppm` renders the actual native components using the daemon's current telemetry and history, without opening a desktop window.
 
-The initial implementation shares the Rust API library from the parent checkout. Publish a versioned client/model crate before moving this application into a separate repository. The repository is currently a local implementation, not a published package.
+The application depends on the independent `railwatch-client` and `railwatch-core` crates. Hardware simulation is a development-only dependency for UI tests. The normal dependency tree contains no daemon, hardware implementation or SQLite. Source is available in the public Railwatch repository; these crates have not been published to a package registry.

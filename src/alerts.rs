@@ -1,5 +1,6 @@
 use crate::model::Telemetry;
 use anyhow::{Result, ensure};
+pub use railwatch_core::measurements::imbalance;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -70,20 +71,6 @@ pub struct AlertEngine {
     pending: BTreeMap<String, u64>,
     recovering: BTreeMap<String, u64>,
     last: Option<(String, u64)>,
-}
-
-pub fn imbalance(currents: &[i64; 6]) -> (i64, u32) {
-    let total: i64 = currents.iter().sum();
-    if total <= 0 {
-        return (0, 0);
-    }
-    let spread = currents.iter().max().unwrap() - currents.iter().min().unwrap();
-    let max = currents
-        .iter()
-        .map(|c| (c * 6 - total).abs())
-        .max()
-        .unwrap();
-    (spread, (max * 100 / total) as u32)
 }
 
 impl AlertEngine {

@@ -1,6 +1,8 @@
 //! Only this transport owns the hidraw descriptor. UI clients never issue USB transactions.
-use crate::{model::*, protocol::*};
+pub mod decode;
 use anyhow::{Context, Result, bail, ensure};
+use decode::*;
+use railwatch_core::model::*;
 use serde::{Deserialize, Serialize};
 use std::{
     fs::{self, File, OpenOptions},
@@ -140,7 +142,7 @@ impl HidDevice {
         Ok(device)
     }
 
-    pub fn exchange(&mut self, opcode: u8, command: u8, payload: &[u8]) -> Result<Vec<u8>> {
+    fn exchange(&mut self, opcode: u8, command: u8, payload: &[u8]) -> Result<Vec<u8>> {
         // Drain old unsolicited input before starting a new transaction.
         let mut buffer = [0; 65];
         for _ in 0..32 {
@@ -202,14 +204,14 @@ impl HidDevice {
         }
         bail!("command {command:#x} timed out; write outcome may be unknown")
     }
-    pub fn read(&mut self, command: u8) -> Result<Vec<u8>> {
+    fn read(&mut self, command: u8) -> Result<Vec<u8>> {
         self.exchange(READ, command, &[])
     }
     pub fn telemetry(&mut self) -> Result<Telemetry> {
         let mut t = decode_telemetry(&self.read(0xe0)?, Family::Ts)?;
         t.device_id = self.info.id.clone();
         t.captured_at_ms = chrono::Utc::now().timestamp_millis();
-        t.monotonic_ms = crate::runtime::monotonic_ms();
+        t.monotonic_ms = railwatch_core::clock::monotonic_ms();
         // Each optional group fails independently; absence never means normal.
         match self.read(0xe1) {
             Ok(r) => {
@@ -317,4 +319,25 @@ pub fn simulated_sample(sequence: u64, fault: bool) -> Telemetry {
         t.safeguards[1].status_raw = 2;
     }
     t
+}
+
+/// Qualified read-only diagnostics. Hardware opcodes stay inside this crate.
+#[derive(Debug, Serialize)]
+pub struct Diagnostics {
+    pub fan_setting_report: Vec<u8>,
+    pub fan_duty_report: Vec<u8>,
+    pub safeguard_report: Vec<u8>,
+    pub writes_available: bool,
+    pub reason: &'static str,
+}
+impl HidDevice {
+    pub fn diagnostics(&mut self) -> Result<Diagnostics> {
+        Ok(Diagnostics {
+            fan_setting_report: self.read(0x41).context("read fan settings")?,
+            fan_duty_report: self.read(0x42)?,
+            safeguard_report: self.read(0xc0)?,
+            writes_available: false,
+            reason: "Fan mode mapping, safeguard timer units, buzzer switching, and nonvolatile persistence require separate qualification. No raw write endpoint is exposed.",
+        })
+    }
 }

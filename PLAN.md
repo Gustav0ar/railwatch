@@ -1,6 +1,6 @@
 # Railwatch Linux implementation plan
 
-> Implementation status, 2026-09-13: the Rust daemon/CLI, history and pricing, incident engine, desktop notifier, selected native GUI and Noctalia v5 Luau client are implemented and installed. The daemon and notifier are enabled, and the plugin is active in the user's Noctalia session. See [validation](docs/validation.md) for installed-system checks, the Ai1600TS hardware run, optimized resource measurements and actual Noctalia/GUI interaction in an isolated headless session. Design A was selected after local browser review. Remaining hardware control qualification, repository publication and kernel work are separate milestones.
+> Implementation status, 2026-09-13: the monitoring stack is implemented and the original development package is installed. The source is now named Railwatch and is public at [Gustav0ar/railwatch](https://github.com/Gustav0ar/railwatch). Protocol decoding, userspace hardware access, shared core and the service client are independent crates; see [architecture](docs/architecture.md). The installed name migration awaits administrator authentication. See [validation](docs/validation.md) for the Ai1600TS hardware runs, resource measurements and actual Noctalia/GUI interaction. Remaining hardware control qualification, releases and kernel work are separate milestones.
 
 
 Prepared on 2026-09-12 from the archived Windows analysis, Linux prototypes, Windows screenshots, local WireView projects, and current upstream documentation.

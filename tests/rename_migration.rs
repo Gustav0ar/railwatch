@@ -22,7 +22,10 @@ fn rename_preserves_history_and_is_idempotent() {
         .unwrap();
     c.execute(
         "INSERT INTO incidents VALUES('fault',?1,'imbalance',0,NULL,500,?2)",
-        rusqlite::params![old, json!({"id":"fault","device_id":old}).to_string()],
+        rusqlite::params![
+            old,
+            json!({"id":"fault","device_id":old,"trigger_sample":t}).to_string()
+        ],
     )
     .unwrap();
     c.execute(
@@ -55,6 +58,8 @@ fn rename_preserves_history_and_is_idempotent() {
         )
         .unwrap();
     assert_eq!(incident, (new.into(), new.into(), 500));
+    let trigger_device: String = c.query_row("SELECT json_extract(json,'$.trigger_sample.device_id') FROM incidents WHERE id='fault'", [], |r| r.get(0)).unwrap();
+    assert_eq!(trigger_device, new);
     let evidence: String = c
         .query_row(
             "SELECT json_extract(json,'$.device_id') FROM evidence WHERE incident='fault'",

@@ -1,10 +1,10 @@
 use anyhow::{Context, Result};
 use clap::Parser;
-use railwatch::{
-    alerts::imbalance,
-    history::{Tariff, parse_price},
-    ipc::call,
+use railwatch_client::call;
+use railwatch_core::{
+    measurements::imbalance,
     model::Telemetry,
+    pricing::{Tariff, parse_price},
 };
 use serde_json::{Value, json};
 use slint::{ComponentHandle, ModelRc, VecModel};
@@ -88,7 +88,7 @@ fn update_ui(ui: &App, v: &Value, graph: &[f32]) {
     let s = &v["snapshot"];
     let age = s["telemetry"]["monotonic_ms"]
         .as_u64()
-        .map(|at| railwatch::runtime::monotonic_ms().saturating_sub(at));
+        .map(|at| railwatch_core::clock::monotonic_ms().saturating_sub(at));
     let stale = v["stale"].as_bool().unwrap_or(true) || age.is_none_or(|age| age > 3500);
     ui.set_device_name(s["device"]["model"].as_str().unwrap_or("Railwatch").into());
     ui.set_stale(stale);
@@ -314,13 +314,13 @@ fn bind_actions(ui: &App, tx: mpsc::SyncSender<Action>) {
 }
 fn main() -> Result<()> {
     let args = Args::parse();
-    let timezone = railwatch::calendar::timezone(args.timezone.as_deref())?;
+    let timezone = railwatch_core::calendar::timezone(args.timezone.as_deref())?;
     if let Some(path) = args.screenshot {
         return screenshot(path, args.runtime_dir, args.page, timezone.name());
     }
     let ui = App::new()?;
     ui.set_page(args.page);
-    let (start, end) = railwatch::calendar::today(chrono::Utc::now(), timezone)?;
+    let (start, end) = railwatch_core::calendar::today(chrono::Utc::now(), timezone)?;
     let today = chrono::DateTime::from_timestamp_millis(start)
         .context("invalid start")?
         .with_timezone(&timezone);
@@ -399,7 +399,7 @@ fn main() -> Result<()> {
                 }
                 if energy_tick % 10 == 0 && !device.is_empty() {
                     let now = chrono::Utc::now();
-                    let start = railwatch::calendar::today(now, timezone)
+                    let start = railwatch_core::calendar::today(now, timezone)
                         .map(|(start, _)| start)
                         .unwrap_or(now.timestamp_millis() / 60000 * 60000);
                     let end = now.timestamp_millis() / 60000 * 60000 + 60000;
@@ -567,8 +567,8 @@ fn screenshot(path: PathBuf, runtime: PathBuf, page: i32, zone: &str) -> Result<
         .as_str()
         .context("no device")?;
     let now = chrono::Utc::now();
-    let timezone = railwatch::calendar::timezone(Some(zone))?;
-    let (start, _) = railwatch::calendar::today(now, timezone)?;
+    let timezone = railwatch_core::calendar::timezone(Some(zone))?;
+    let (start, _) = railwatch_core::calendar::today(now, timezone)?;
     ui.set_timezone(zone.into());
     let end = now.timestamp_millis() / 60000 * 60000 + 60000;
     let samples = call(
@@ -720,7 +720,7 @@ mod tests {
         assert!(
             matches!(rx.try_recv().unwrap(),Action::Acknowledge(id) if id=="retained-incident")
         );
-        let t = railwatch::device::simulated_sample(2, true);
+        let t = railwatch_hardware::simulated_sample(2, true);
         update_ui(
             &app,
             &json!({"stale":true,"age_ms":5000,"snapshot":{"device":{"model":"Test PSU"},"telemetry":t,"active_incidents":[],"storage_error":"disk full"}}),

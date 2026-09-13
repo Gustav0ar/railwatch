@@ -5,7 +5,8 @@ use crate::{
     history::History,
     model::{DeviceInfo, Telemetry},
 };
-use anyhow::{Context, Result, ensure};
+use anyhow::{Result, ensure};
+pub use railwatch_core::clock::monotonic_ms;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::VecDeque,
@@ -340,21 +341,5 @@ fn pause(d: Duration) {
     }
 }
 fn inspect(d: &mut HidDevice) -> Result<serde_json::Value> {
-    let fan = d.read(0x41).context("read fan settings")?;
-    let duty = d.read(0x42)?;
-    let safeguard = d.read(0xc0)?;
-    Ok(
-        serde_json::json!({"fan_setting_report":fan,"fan_duty_report":duty,"safeguard_report":safeguard,"writes_available":false,"reason":"Fan mode mapping, safeguard timer units, buzzer switching, and nonvolatile persistence require separate qualification. No raw write endpoint is exposed."}),
-    )
-}
-
-/// CLOCK_BOOTTIME includes suspend, so resuming never integrates the sleep interval.
-pub fn monotonic_ms() -> u64 {
-    let mut time = libc::timespec {
-        tv_sec: 0,
-        tv_nsec: 0,
-    };
-    let ok = unsafe { libc::clock_gettime(libc::CLOCK_BOOTTIME, &mut time) };
-    assert_eq!(ok, 0, "CLOCK_BOOTTIME unavailable");
-    time.tv_sec as u64 * 1000 + time.tv_nsec as u64 / 1_000_000
+    Ok(serde_json::to_value(d.diagnostics()?)?)
 }

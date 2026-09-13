@@ -8,6 +8,6 @@ mkdir -p .runtime/dist
 tar --sort=name --mtime="@${SOURCE_DATE_EPOCH:-0}" --owner=0 --group=0 --numeric-owner \
     --exclude='*/target' --exclude='__pycache__' \
     --transform="s,^,railwatch-$version/," \
-    -cf - Cargo.toml Cargo.lock LICENSE README.md PLAN.md src tests fixtures interfaces \
+    -cf - Cargo.toml Cargo.lock LICENSE README.md PLAN.md src tests fixtures crates \
     clients docs packaging scripts | gzip -n > "$destination"
 sha256sum "$destination"

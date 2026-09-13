@@ -455,24 +455,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "railwatch"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "chrono-tz",
- "clap",
- "iana-time-zone",
- "libc",
- "mlua",
- "rusqlite",
- "serde",
- "serde_json",
- "tempfile",
- "uuid",
-]
-
-[[package]]
 name = "num-traits"
 version = "0.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -569,6 +551,67 @@ name = "r-efi"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
+
+[[package]]
+name = "railwatch"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "chrono-tz",
+ "clap",
+ "libc",
+ "mlua",
+ "railwatch-client",
+ "railwatch-core",
+ "railwatch-hardware",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "uuid",
+]
+
+[[package]]
+name = "railwatch-client"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "railwatch-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "chrono-tz",
+ "iana-time-zone",
+ "libc",
+ "serde",
+]
+
+[[package]]
+name = "railwatch-hardware"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "libc",
+ "railwatch-core",
+ "railwatch-protocol",
+ "serde",
+]
+
+[[package]]
+name = "railwatch-protocol"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "redox_syscall"

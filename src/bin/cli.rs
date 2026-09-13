@@ -251,7 +251,7 @@ fn main() -> Result<()> {
             let mut t = d.telemetry()?;
             t.session_id = uuid::Uuid::new_v4().to_string();
             t.captured_at_ms = chrono::Utc::now().timestamp_millis();
-            let ocp = d.read(0xc0)?;
+            let ocp = d.diagnostics()?.safeguard_report;
             let v = json!({"device":d.info,"telemetry":t,"safeguard_configuration_report":ocp,"reports":d.captures});
             if let Some(p) = output {
                 std::fs::write(p, serde_json::to_vec_pretty(&v)?)?;
@@ -337,10 +337,7 @@ fn main() -> Result<()> {
         },
         Command::Inspect => call(&control, "Inspect", json!({}))?,
         Command::Interface => {
-            println!(
-                "{}",
-                include_str!("../../interfaces/io.github.railwatch.Monitor1.varlink")
-            );
+            println!("{}", railwatch_client::SCHEMA);
             return Ok(());
         }
     };

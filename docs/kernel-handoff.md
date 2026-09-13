@@ -1,6 +1,8 @@
 # Kernel handoff
 
-The daemon is not code that can be moved into the Linux kernel. Keep USB transport and integer decoding separate for a future Rust HID driver that registers standard hwmon channels. Retain SQLite, software incidents, tariffs, notifications and UI in userspace. The user's Rust-only constraint supersedes the original C-driver proposal. Required Rust bindings and an acceptable upstream design need maintainer review before promising that migration.
+The daemon is not code that can be moved into the Linux kernel. `crates/protocol` contains the dependency-free, allocation-free `no_std` wire decoder. `crates/hardware` owns the userspace hidraw transport and converts decoded readings into userspace values. `crates/client` owns the service contract independently of both. See [architecture](architecture.md).
+
+A future Rust HID driver must implement kernel transport and register standard hwmon channels. Retain SQLite, software incidents, tariffs, notifications and UI in userspace. The user's Rust-only constraint supersedes the original C-driver proposal. Required Rust bindings and an acceptable upstream design need maintainer review before promising that migration. A successful `no_std` library check alone does not establish compatibility with a kernel build.
 
 ## Evidence available for an RFC
 
@@ -22,6 +24,6 @@ Before a kernel backend replaces hidraw, resolve efficiency, device fault snapsh
 
 ## Outstanding hardware qualification
 
-Fan mode/duty writes, zero-fan mutation, safeguard units and ranges, `C2` switch semantics, `F1` nonvolatile commit, firmware behavior after daemon loss, suspend/resume, USB disconnect/reconnect, and Ai1300TS/T/P hardware fixtures need separate qualification. No hardware protection was disabled and no power-cycle or physical disconnection was performed during this implementation.
+Fan mode/duty writes, zero-fan mutation, safeguard units and ranges, `C2` switch semantics, `F1` nonvolatile commit, firmware behavior after daemon loss, suspend/resume, live USB unplug/replug, and Ai1300TS/T/P hardware fixtures need separate qualification. Startup after a user-performed reboot and move to another USB header was verified. No hardware protection was disabled.
 
 The next kernel milestone is an RFC patch series with Kconfig/Makefile changes, documentation, MAINTAINERS coverage, strict checkpatch and kernel builds. Loading and testing that driver is a separate administrator operation. No driver has been submitted or accepted upstream.

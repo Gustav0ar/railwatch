@@ -1,0 +1,12 @@
+[package]
+name = "railwatch-hardware"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-2.0-or-later"
+[dependencies]
+railwatch-protocol = { path = "../protocol" }
+railwatch-core = { path = "../core" }
+anyhow = "1"
+chrono = "0.4"
+libc = "0.2"
+serde = { version = "1", features = ["derive"] }

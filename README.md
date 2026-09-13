@@ -83,7 +83,9 @@ The notifier uses the desktop notification service through `notify-send` and Pip
 - `clients/noctalia`: a source catalog and Luau plugin for Noctalia v5, plugin API 9. One persistent `railwatch plugin-stream` Rust process supplies live snapshots, energy and incidents. It does not poll HID or produce duplicate sounds.
 - `packaging`: systemd, udev, sysusers, desktop entry and an Arch package recipe. See [installation](docs/installation.md) before installing.
 
-Source repository: [Gustav0ar/railwatch](https://github.com/Gustav0ar/railwatch). The daemon, CLI, GUI and Noctalia plugin share this repository. The Noctalia catalog can be published separately. The GUI imports the Rust client/model library by path; extract and version that library before splitting the GUI into a separate repository. No release has been published.
+Source repository: [Gustav0ar/railwatch](https://github.com/Gustav0ar/railwatch). The daemon, CLI, GUI and Noctalia plugin share this public repository. The hardware protocol, Linux transport, shared userspace core and socket client are separate Rust crates. The GUI uses the client and core without a production dependency on the daemon, HID access or SQLite. The Noctalia catalog can be published separately. No release has been published.
+
+See [architecture](docs/architecture.md) for the dependency diagram and kernel handoff. `railwatch-protocol` is a dependency-free, allocation-free `no_std` decoder. Linux transport and service functionality remain separate from that kernel candidate.
 
 ## Verify
 

@@ -4,6 +4,10 @@ Date: 2026-09-13. Host: CachyOS Linux, MPG Ai1600TS, firmware revision `10`. Liv
 
 ## Automated checks
 
+After separating the hardware and service crates, all 27 workspace and native GUI tests passed, together with Clippy, formatting and the Noctalia linter. Captured Linux frames run directly against `railwatch-protocol`. An exhaustive numeric test checks all 65,536 wire encodings at the largest supported scale. The protocol library builds with `no_std` and no default features. Dependency checks require no runtime dependencies for that crate and reject daemon, hardware or SQLite dependencies in the production GUI and socket client.
+
+The migration test also checks device IDs nested in incident trigger readings, retained evidence, acknowledgement timestamps, energy and pricing after two executions of the migration transaction. These checks use isolated data; the installed name migration still awaits local administrator authentication.
+
 `scripts/check.sh` runs the core Rust tests, Clippy with warnings denied, formatting, native GUI build/tests, Rust transport tests, Noctalia entry behavior tests in an embedded Luau VM and the installed Noctalia offline linter.
 
 Coverage includes:
