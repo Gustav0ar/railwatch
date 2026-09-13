@@ -1,0 +1,31 @@
+[package]
+name = "msi-psu"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "GPL-2.0-or-later"
+description = "Local MSI PSU monitoring, incident history, and energy accounting"
+
+[dependencies]
+anyhow = "1"
+chrono = { version = "0.4", features = ["serde"] }
+chrono-tz = "0.10"
+clap = { version = "4", features = ["derive", "env"] }
+libc = "0.2"
+iana-time-zone = "0.1"
+rusqlite = { version = "0.38", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4", "serde"] }
+
+[dev-dependencies]
+tempfile = "3"
+mlua = { version = "0.11", features = ["luau", "vendored"] }
+
+[[bin]]
+name = "msi-psud"
+path = "src/bin/daemon.rs"
+
+[[bin]]
+name = "msi-psu"
+path = "src/bin/cli.rs"

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=MSI PSU
+Comment=PSU connector monitoring and electricity costs
+Exec=msi-psu-gui
+Icon=utilities-system-monitor
+Categories=System;Monitor;
+Terminal=false

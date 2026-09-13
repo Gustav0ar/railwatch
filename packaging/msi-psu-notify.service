@@ -1,0 +1,12 @@
+[Unit]
+Description=MSI PSU desktop alerts
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+ExecStart=/usr/bin/msi-psu notify run
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=graphical-session.target

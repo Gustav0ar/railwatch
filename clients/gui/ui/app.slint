@@ -1,0 +1,208 @@
+import { VerticalBox, HorizontalBox, ScrollView, LineEdit, ComboBox, Palette } from "std-widgets.slint";
+export struct Conductor { amps: string, level: float }
+export struct IncidentRow { id: string, title: string, detail: string, critical: bool, acknowledged: bool }
+component ActionButton inherits Rectangle {
+    in property <string> text;
+    in property <bool> primary: false;
+    in property <bool> enabled: true;
+    callback clicked();
+    height: 36px; min-width: 100px; horizontal-stretch: 0;
+    background: #000; border-width: 1px; border-color: primary || focus.has-focus ? #70b7ff : #444;
+    opacity: enabled ? 1 : 0.45;
+    accessible-role: button; accessible-label: text; accessible-enabled: enabled;
+    accessible-action-default => { if enabled {root.clicked();} }
+    forward-focus: focus;
+    Text { vertical-stretch: 0; text: root.text; color: #fff; horizontal-alignment: center; vertical-alignment: center; font-size: 14px; }
+    TouchArea { width: parent.width; height: parent.height; enabled: root.enabled; clicked => {focus.focus();root.clicked();} }
+    focus := FocusScope { width: 0px; height: 0px; enabled: root.enabled; key-pressed(event) => {if event.text == " " || event.text == "\n" {root.clicked();return accept;} return reject;} }
+}
+component Label inherits Text { vertical-stretch: 0; color: #fff; font-size: 15px; }
+component Heading inherits Label { font-size: 20px; font-weight: 600; }
+component Rule inherits Rectangle { height: 1px; background: #272727; }
+component Metric inherits VerticalBox {
+    in property <string> caption;
+    in property <string> value;
+    padding: 0px; spacing: 8px;
+    Text { vertical-stretch: 0; text: root.caption; color: #b0b0b0; font-size: 14px; }
+    Text { vertical-stretch: 0; text: root.value; color: #fff; font-size: 27px; }
+}
+component Connector inherits VerticalBox {
+    in property <string> title;
+    in property <[Conductor]> conductors;
+    in property <string> summary;
+    padding: 0px; spacing: 12px;
+    Heading { text: root.title; }
+    HorizontalBox { height: 170px; padding: 0px; spacing: 10px;
+        for pin[index] in root.conductors: VerticalBox {
+            padding: 0px; spacing: 6px;
+            Rectangle { vertical-stretch: 1;
+                Rectangle { y: parent.height - self.height; height: max(2px,parent.height * pin.level); width: parent.width; background: #70b7ff; }
+            }
+            Label { text: pin.amps; horizontal-alignment: center; }
+            Text { vertical-stretch: 0; text: index+1; color: #b0b0b0; horizontal-alignment: center; font-size: 13px; }
+        }
+    }
+    Label { text: root.summary; wrap: word-wrap; font-size: 14px; }
+}
+export component App inherits Window {
+    init => {Palette.color-scheme = ColorScheme.dark;}
+    title: "MSI PSU"; background: #000; preferred-width: 1220px; preferred-height: 850px; min-width: 900px; min-height: 620px;
+    default-font-family: "Adwaita Sans"; default-font-size: 15px;
+    in-out property <int> page: 0;
+    in-out property <string> device-name: "MSI PSU";
+    in-out property <string> status: "Connecting to msi-psud";
+    in-out property <bool> stale: true;
+    in-out property <string> problem;
+    in-out property <string> watts: "Unavailable";
+    in-out property <string> efficiency: "Unavailable";
+    in-out property <string> temperature: "Unavailable";
+    in-out property <string> fan: "Unavailable";
+    in-out property <string> energy: "No recorded energy";
+    in-out property <string> cost: "Add a price per kWh";
+    in-out property <string> coverage;
+    in-out property <[Conductor]> connector-one;
+    in-out property <[Conductor]> connector-two;
+    in-out property <string> connector-one-summary;
+    in-out property <string> connector-two-summary;
+    in-out property <[float]> graph;
+    in-out property <float> graph-max: 500;
+    in-out property <[string]> rails;
+    in-out property <[string]> energy-rows;
+    in-out property <[string]> device-rows;
+    in-out property <[string]> cooling-rows;
+    in-out property <[IncidentRow]> incidents;
+    in-out property <string> from;
+    in-out property <string> to;
+    in-out property <string> timezone: "America/Sao_Paulo";
+    in-out property <string> tariff-price: "1.00";
+    in-out property <string> tariff-currency: "BRL";
+    in-out property <string> tariff-effective;
+    in-out property <string> notice;
+    in-out property <string> incident-detail;
+    in-out property <int> period: 1;
+    in-out property <bool> custom-range: false;
+    in-out property <[string]> tariff-rows;
+    in-out property <string> configuration-detail;
+    callback query-energy(string,string,string,int);
+    callback save-tariff(string,string,string);
+    callback inspect();
+    callback acknowledge(string);
+    callback evidence(string);
+    callback export-data();
+    callback refresh-incidents();
+    VerticalBox { padding: 0px; spacing: 0px;
+        HorizontalBox { padding: 24px; spacing: 24px;
+            VerticalBox { padding: 0px; horizontal-stretch: 1; Heading { text: root.device-name; } Text { vertical-stretch: 0; text: root.status; color: root.stale ? #f4c570 : #79c5a3; } }
+            ActionButton { width: 132px; text: "Export data"; clicked => {root.export-data();} }
+        }
+        Rule {}
+        if root.problem != "": Rectangle { background: #000; height: 55px;
+            Text { x: 24px; width: parent.width - 48px; height: parent.height; text: root.problem; color: #ff8096; wrap: word-wrap; vertical-alignment: center; }
+        }
+        HorizontalBox { padding: 0px; spacing: 0px;
+            VerticalBox { width: 172px; padding: 18px; spacing: 10px;
+                for name[index] in ["Overview", "Energy & cost", "Incidents", "Cooling", "Device"]: ActionButton {
+                    text: name; primary: root.page == index;
+                    clicked => {root.page=index; if index==2 {root.refresh-incidents();} if index==3 {root.inspect();}}
+                }
+                Rectangle { vertical-stretch: 1; }
+                Text { vertical-stretch: 0; text: "MSI PSU\nLocal monitoring"; color: #b0b0b0; wrap: word-wrap; font-size: 13px; }
+            }
+            Rectangle { width: 1px; background: #272727; }
+            ScrollView { horizontal-stretch: 1;
+                VerticalBox { padding: 24px; spacing: 24px;
+                    if root.page == 0: VerticalBox { padding: 0px; spacing: 24px;
+                        HorizontalBox { padding: 0px;
+                            Metric { caption: "DC output"; value: root.watts; }
+                            Metric { caption: "PSU efficiency"; value: root.efficiency; }
+                            Metric { caption: "Temperature"; value: root.temperature; }
+                            Metric { caption: "Fan speed"; value: root.fan; }
+                        }
+                        Rule {}
+                        HorizontalBox { padding: 0px; spacing: 28px;
+                            Connector { title: "Connector 1"; conductors: root.connector-one; summary: root.connector-one-summary; }
+                            Connector { title: "Connector 2"; conductors: root.connector-two; summary: root.connector-two-summary; }
+                        }
+                        Rule {}
+                        HorizontalBox { padding: 0px; spacing: 24px;
+                            VerticalBox { padding: 0px; spacing: 12px;
+                                Heading { text: "Today's energy"; }
+                                Label { text: root.energy; font-size: 24px; }
+                                Text { vertical-stretch: 0; text: root.cost; color: #e8cb83; font-size: 23px; }
+                                Text { vertical-stretch: 0; text: root.coverage; color: #b0b0b0; wrap: word-wrap; }
+                                ActionButton { text: "Energy & cost"; clicked => {root.page=1;} }
+                            }
+                            VerticalBox { padding: 0px; spacing: 12px;
+                                Heading { text: "DC rails"; }
+                                for row in root.rails: Label { text: row; font-size: 14px; }
+                            }
+                        }
+                        Heading { text: "Output power · last 3 minutes"; }
+                        Rectangle { height: 110px;
+                            for value[index] in root.graph: Rectangle {
+                                x: index * parent.width / max(root.graph.length,1); width: max(1px,parent.width/max(root.graph.length,1)-1px);
+                                height: value < 0 ? 0px : parent.height * min(value / root.graph-max,1);
+                                y: parent.height - self.height; background: root.stale ? #777 : #70b7ff;
+                            }
+                        }
+                    }
+                    if root.page == 1: VerticalBox { padding: 0px; spacing: 18px;
+                        Heading { text: "Energy & cost"; }
+                        Label { text: "Estimated wall input, calculated from output and efficiency."; wrap: word-wrap; }
+                        HorizontalBox { padding: 0px; spacing: 12px;
+                            VerticalBox { padding: 0px; Label { text: "From"; } LineEdit { text <=> root.from; } }
+                            VerticalBox { padding: 0px; Label { text: "Until"; } LineEdit { text <=> root.to; } }
+                        }
+                        HorizontalBox { padding: 0px;
+                            ComboBox { model: ["Hour","Day","Week","Month","Year"]; current-index <=> root.period; }
+                            LineEdit { text <=> root.timezone; placeholder-text: "Time zone"; }
+                            ActionButton { text: "Apply range"; clicked => {root.custom-range=true;root.query-energy(root.from,root.to,root.timezone,root.period);} }
+                        }
+                        Rule {}
+                        for row in root.energy-rows: Label { text: row; wrap: word-wrap; font-size: 14px; }
+                        Rule {}
+                        Heading { text: "Electricity price"; }
+                        for row in root.tariff-rows: Label {text:row;wrap:word-wrap;}
+                        Label { text: "A dated price applies to recorded energy from that minute onward."; wrap: word-wrap; }
+                        HorizontalBox { padding: 0px;
+                            VerticalBox { padding: 0px; Label { text: "Price per kWh"; } LineEdit { text <=> root.tariff-price; } }
+                            VerticalBox { padding: 0px; Label { text: "Currency"; } LineEdit { text <=> root.tariff-currency; } }
+                            VerticalBox { padding: 0px; Label { text: "Effective from"; } LineEdit { text <=> root.tariff-effective; } }
+                        }
+                        ActionButton { text: "Add dated price"; clicked => {root.save-tariff(root.tariff-price,root.tariff-currency,root.tariff-effective);} }
+                    }
+                    if root.page == 2: VerticalBox { padding: 0px; spacing: 16px;
+                        Heading { text: "Incident history"; }
+                        if root.incidents.length == 0: Label { text: "No incidents recorded."; }
+                        for incident in root.incidents: VerticalBox { padding: 0px; spacing: 10px;
+                            Text { vertical-stretch: 0; text: incident.title; color: incident.critical ? #ff8096 : #f4c570; wrap: word-wrap; font-size: 17px; }
+                            Label { text: incident.detail; wrap: word-wrap; font-size: 13px; }
+                            HorizontalBox { padding: 0px;
+                                ActionButton { text: "View evidence"; clicked => {root.evidence(incident.id);} }
+                                ActionButton { text: incident.acknowledged ? "Acknowledged" : "Acknowledge"; enabled: !incident.acknowledged; clicked => {root.acknowledge(incident.id);} }
+                            }
+                            Rule {}
+                        }
+                        if root.incident-detail != "": Label { text: root.incident-detail; wrap: word-wrap; }
+                    }
+                    if root.page == 3: VerticalBox { padding: 0px; spacing: 18px;
+                        Heading { text: "Cooling"; }
+                        for row in root.cooling-rows: Label { text: row; wrap: word-wrap; }
+                        Rule {}
+                        Label { text: "Fan mode names and write behavior are still being verified. Current hardware settings are available for inspection."; wrap: word-wrap; }
+                        Label {text:root.configuration-detail;wrap:word-wrap;}
+                        ActionButton { text: "Read device settings"; clicked => {root.inspect();} }
+                    }
+                    if root.page == 4: VerticalBox { padding: 0px; spacing: 18px;
+                        Heading { text: "Device & service"; }
+                        for row in root.device-rows: Label { text: row; wrap: word-wrap; }
+                        Rule {}
+                        Label { text: "Software imbalance alerts use a load gate, hysteresis and duration. Configure the full policy with msi-psu policy. Hardware alarms remain independent."; wrap: word-wrap; }
+                    }
+                }
+            }
+        }
+        Rule {}
+        Text { vertical-stretch: 0; text: root.notice; color: #e8cb83; wrap: word-wrap; min-height: 30px; vertical-alignment: center; }
+    }
+}

@@ -1,0 +1,40 @@
+# Build from a release source archive; no installation is performed by this repository.
+pkgname=msi-psu
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='MSI PSU telemetry, incidents and electricity costs'
+arch=('x86_64' 'aarch64')
+license=('GPL-2.0-or-later')
+depends=('glibc' 'gcc-libs' 'systemd-libs' 'fontconfig' 'libxkbcommon' 'wayland' 'libx11' 'libxcursor' 'libxi' 'libxrandr')
+makedepends=('cargo')
+# GCC LTO objects from bundled SQLite cannot be consumed by Rust's LLVM linker.
+options=('!lto')
+optdepends=('libnotify: desktop notifications' 'pipewire: desktop sound via pw-play')
+source=("msi-psu-$pkgver.tar.gz")
+sha256sums=('SKIP')
+build() {
+  cd "$srcdir/msi-psu-$pkgver"
+  cargo build --release --locked
+  cargo build --release --locked --manifest-path clients/gui/Cargo.toml
+}
+check() {
+  cd "$srcdir/msi-psu-$pkgver"
+  cargo test --release --locked
+  cargo test --release --locked --manifest-path clients/gui/Cargo.toml
+}
+package() {
+  cd "$srcdir/msi-psu-$pkgver"
+  install -Dm755 target/release/msi-psud "$pkgdir/usr/bin/msi-psud"
+  install -Dm755 target/release/msi-psu "$pkgdir/usr/bin/msi-psu"
+  install -Dm755 clients/gui/target/release/msi-psu-gui "$pkgdir/usr/bin/msi-psu-gui"
+  install -Dm644 packaging/msi-psu-gui.desktop "$pkgdir/usr/share/applications/msi-psu-gui.desktop"
+  install -Dm644 packaging/msi-psud.service "$pkgdir/usr/lib/systemd/system/msi-psud.service"
+  install -Dm644 packaging/msi-psu-notify.service "$pkgdir/usr/lib/systemd/user/msi-psu-notify.service"
+  install -Dm644 packaging/60-msi-psu.rules "$pkgdir/usr/lib/udev/rules.d/60-msi-psu.rules"
+  install -Dm644 packaging/msi-psu.sysusers "$pkgdir/usr/lib/sysusers.d/msi-psu.conf"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/msi-psu/README.md"
+  install -Dm644 docs/installation.md "$pkgdir/usr/share/doc/msi-psu/installation.md"
+  install -Dm644 interfaces/io.github.msipsu.Monitor1.varlink "$pkgdir/usr/share/varlink/interfaces/io.github.msipsu.Monitor1.varlink"
+  install -d "$pkgdir/usr/share/msi-psu/noctalia"
+  cp -r clients/noctalia/catalog.toml clients/noctalia/msi-psu "$pkgdir/usr/share/msi-psu/noctalia/"
+}

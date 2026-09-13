@@ -1,0 +1,18 @@
+{
+  "closed_reader_exit": "within 5 seconds",
+  "daemon_baseline_fds": 12,
+  "daemon_baseline_rss_kib": 8544,
+  "daemon_cpu_percent_of_one_core": 0.13998646035043696,
+  "daemon_final_fds": 12,
+  "daemon_final_rss_kib": 9412,
+  "profile": "release",
+  "sampled_seconds": 300,
+  "slow_reader_rss_kib": 5764,
+  "stream_baseline_fds": 4,
+  "stream_baseline_rss_kib": 5840,
+  "stream_cpu_percent_of_one_core": 0.06999323024053918,
+  "stream_final_fds": 4,
+  "stream_final_rss_kib": 5888,
+  "stream_peak_sampled_rss_kib": 5888,
+  "warmup_seconds": 20
+}

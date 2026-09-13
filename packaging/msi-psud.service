@@ -1,0 +1,34 @@
+[Unit]
+Description=MSI PSU telemetry and history
+After=systemd-udevd.service
+
+[Service]
+Type=simple
+User=msi-psu
+Group=msi-psu-read
+SupplementaryGroups=msi-psu msi-psu-control
+ExecStart=/usr/bin/msi-psud --control-group msi-psu-control
+Restart=on-failure
+RestartSec=3
+RuntimeDirectory=msi-psu
+RuntimeDirectoryMode=0750
+StateDirectory=msi-psu
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+CapabilityBoundingSet=
+SystemCallArchitectures=native
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target

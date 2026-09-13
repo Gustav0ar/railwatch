@@ -1,0 +1,17 @@
+# Local API v1. Integer sensor values use SI milli/micro units; timestamps are Unix ms.
+interface io.github.msipsu.Monitor1
+method Snapshot() -> (snapshot: object, age_ms: ?int, stale: bool)
+method Watch() -> (snapshot: object, age_ms: ?int, stale: bool)
+method Devices() -> (current: ?object, recorded: []object)
+method Incidents(active: ?bool, limit: ?int) -> (incidents: []object)
+method Evidence(id: string) -> (samples: []object)
+method Samples(device_id: string, from_ms: int, to_ms: int, limit: ?int) -> (samples: []object)
+method Energy(device_id: string, from_ms: int, to_ms: int, period: ?string, timezone: ?string) -> (from_ms: int, to_ms: int, timezone: string, basis: string, buckets: []object)
+method Tariffs() -> (tariffs: []object)
+method Policy() -> (revision: int, policy: object)
+# The following methods require the private control socket.
+method Acknowledge(id: string) -> (acknowledged: string)
+method SetTariff(tariff: object, replace: ?bool) -> (tariff: object)
+method SetPolicy(expected_revision: int, policy: object) -> (revision: int)
+method Inspect() -> (fan_setting_report: []int, fan_duty_report: []int, safeguard_report: []int, writes_available: bool, reason: string)
+error Failed(message: string)

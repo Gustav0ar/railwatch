@@ -1,0 +1,7 @@
+/target/
+/.runtime/
+*.db
+*.db-shm
+*.db-wal
+/clients/gui/target/
+__pycache__/

@@ -1,0 +1,3 @@
+# Only qualified TS identities. hidraw needs writes to send telemetry read requests.
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0db0", ATTRS{idProduct}=="808c", GROUP="msi-psu", MODE="0660"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0db0", ATTRS{idProduct}=="aa6f", GROUP="msi-psu", MODE="0660"
