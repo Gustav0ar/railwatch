@@ -49,17 +49,29 @@ The CLI, Noctalia's persistent transport and native GUI renderer read the same d
 
 The optimized Rust `plugin-stream` process was profiled against a simulator with active incidents: 20 seconds of warm-up, 300 seconds of measurement, and a separate 20-second stalled-reader check. It used 5,840–5,888 KiB RSS and 0.070% of one CPU core. The simulator daemon used 8,544–9,412 KiB RSS and 0.140% of one core. Open descriptors stayed at four for the stream and twelve for the daemon. A stalled reader used 5,764 KiB, and closing the pipe ended the stream within five seconds. A separate integration test restarted the daemon and verified that the same stream process reconnected. See [resource measurements](performance.json).
 
-These observations do not prove zero leaks over indefinite operation. The checks enforce explicit memory-growth, descriptor and CPU budgets. Run `cargo test --release --test performance -- --ignored --nocapture` for the endurance check; `MSI_PSU_SOAK_SECONDS` can extend its measured window up to 86,400 seconds. Application transport and tests use Rust; Noctalia entries and their host fixture use Luau. No Python runtime is required.
+These observations do not prove zero leaks over indefinite operation. The checks enforce explicit memory-growth, descriptor and CPU budgets. Run `cargo test --release --test performance -- --ignored --nocapture` for the endurance check; `RAILWATCH_SOAK_SECONDS` can extend its measured window up to 86,400 seconds. Application transport and tests use Rust; Noctalia entries and their host fixture use Luau. No Python runtime is required.
 
 A labeled desktop notification and one-second warning tone were sent through `notify-send` and `pw-play`. Both processes completed successfully. This proves delivery to the notification/audio stack, not independently measured speaker audibility. The check used an isolated user-state directory and did not install a notifier service.
 
-Systemd's offline verifier accepted copies of the service definitions with executable paths pointing to the development binaries. The installed `/usr/bin` paths do not exist yet. Group creation, udev application, installed service startup, session group access and package installation have not been exercised on the daily-driver system.
+Systemd's offline verifier accepted copies of the service definitions with executable paths pointing to the development binaries. Installed service validation followed on the daily-driver system, as recorded below.
 
-The Arch package was built locally with `makepkg`, including its daemon/CLI integration and native GUI checks. The recipe includes all three binaries and the Noctalia source. CachyOS's default GCC LTO produced incompatible bundled SQLite objects on the first build; the package-specific `!lto` setting fixed the link. A source archive SHA-256 was verified before the successful build. No package installation was performed. The local package retains a build-path reference in the GUI; it is a development artifact rather than a reproducible public release.
+The Arch package was built locally with `makepkg`, including its daemon/CLI integration and native GUI checks. The recipe includes all three binaries and the Noctalia source. CachyOS's default GCC LTO produced incompatible bundled SQLite objects on the first build; the package-specific `!lto` setting fixed the link. A source archive SHA-256 was verified before the successful build. The local package retains a build-path reference in the GUI; it is a development artifact rather than a reproducible public release.
+
+## Installed system
+
+With explicit user approval, the pre-rename development package was installed through pacman on 2026-09-13. The package SHA-256 was `8fb0d1a8179dc2fcdd41bd218d7ca4955f292eea612153843f3deb0397632e88`.
+
+Both `railwatchd.service` and the user service `railwatch-notify.service` are enabled and active. The installed CLI confirmed fresh Ai1600TS telemetry, advancing database commits, zero dropped samples, and no device or storage error. Read-only cooling and safeguard diagnostics succeeded through the control socket. An hourly query returned 0.013984088333333335 kWh output and 0.016947159670555555 kWh estimated input across 263,958 ms of observed coverage. No tariff is configured; cost correctly remained null. The installed notification test and audio player completed successfully.
+
+The live Noctalia configuration now enables `gustav0ar/railwatch` from `/usr/share/railwatch/noctalia`, with its summary widget after WireView. Configuration validation succeeded with four existing unrelated warnings. Opening the dashboard created Noctalia's attached panel on DP-1. A private backup of the previous settings remains in ignored `.runtime`.
+
+An old development ACL initially left the HID owning group without access despite the udev mode. Restoring the group's read/write ACL allowed the daemon to reconnect automatically. The obsolete direct-user HID grant was removed. Gustavo now belongs to the reader and control groups. Temporary socket ACLs bridged the original desktop session until the next login.
+
+After a user-initiated reboot and move to another motherboard USB header, the daemon discovered the PSU at `/dev/hidraw15` without configuration changes. Both enabled services started successfully with zero restarts. Reader and control sockets had ordinary group permissions with no temporary user ACL, and both telemetry and read-only diagnostics succeeded. Sequence 192 was fresh at 250 ms, with no missing groups, device errors, storage errors, dropped samples or active incidents. Recorded history remained available and continued accumulating across the new session. The Noctalia plugin stayed enabled, its dashboard opened on DP-2, and the installed native GUI opened an `Railwatch` window successfully. No firmware settings were changed.
 
 ## Rendered native UI
 
-These images come from the actual Slint components connected to the daemon, not the earlier HTML mocks:
+These Railwatch images come from the actual Slint components connected to an isolated simulator, including simulated alerts:
 
 ![Native overview](screenshots/overview.png)
 
@@ -71,12 +83,8 @@ Actual pointer input opened the plugin's full-view button, which launched the re
 
 ![Noctalia on the private display](screenshots/noctalia.png)
 
-![Explicit stale state after daemon loss](screenshots/noctalia-stale.png)
-
-![GUI acknowledgement through actual pointer input](screenshots/gui-acknowledgement.png)
-
 ## Remaining qualification
 
 No dangerous cable faults were induced. Hardware alarm cases use deterministic simulated/captured protocol states. Physical cable orientation, threshold calibration under sustained workloads, suspend/resume, USB detach/reconnect, daemon-crash firmware cooling behavior, physical power cycles and models other than this Ai1600TS remain unverified.
 
-Cooling writes, safeguard mutation, buzzer switching, persistence and the kernel driver remain staged work, as described in the plan. GitHub repositories, release publishing, system installation and kernel submission have not occurred. This is a tested local monitoring implementation, not a claim that the complete upstream roadmap is finished.
+Cooling writes, safeguard mutation, buzzer switching, persistence and the kernel driver remain staged work, as described in the plan. Release publishing and kernel submission have not occurred. This is an installed and tested monitoring implementation; the complete upstream roadmap is not finished.

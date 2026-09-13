@@ -7,7 +7,7 @@ The daemon is not code that can be moved into the Linux kernel. Keep USB transpo
 - `fixtures/ai1600ts-linux.json` contains sanitized Linux captures with the serial report omitted.
 - The unnumbered HID output uses a 65-byte userspace write, including the leading zero report ID. Linux input is 64 bytes; a compatibility normalizer also handles a leading zero in a 65-byte capture.
 - The initial handshake is `00 FA 51`, distinct from ordinary `00 51 CMD` reads.
-- TS `E0` has a 44-byte payload. Its numeric format uses an unsigned 11-bit mantissa and signed five-bit exponent, as in the recovered MSI implementation. Do not substitute the standard signed PMBus mantissa.
+- TS `E0` has a 44-byte payload. Its numeric format uses an unsigned 11-bit mantissa and signed five-bit exponent, as in the recovered vendor implementation. Do not substitute the standard signed PMBus mantissa.
 - `E1` has 18 alarm bytes. `C1` has two 21-byte fault snapshots, not a 45-byte payload.
 - A payload's low byte `FE` is not by itself an error. Live runtime values naturally cross it. A report consisting only of `FE` and zero padding remains ambiguous and is currently omitted.
 - Raw fan mode 1 can coexist with firmware-controlled fan changes and requested duty zero. Writable PWM mapping is not yet qualified.

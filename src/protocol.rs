@@ -1,4 +1,4 @@
-//! MSI's Windows ValueCalc uses an unsigned mantissa. Keep that vendor behavior explicit.
+//! The recovered Windows ValueCalc uses an unsigned mantissa. Keep that vendor behavior explicit.
 use crate::model::{Family, Fan, FaultSnapshot, Rail, Telemetry};
 use anyhow::{Result, bail, ensure};
 
@@ -61,7 +61,7 @@ pub fn response(report: &[u8], opcode: u8, command: u8, length: usize) -> Result
     Ok(&r[2..2 + length])
 }
 
-pub fn msi_scaled(bytes: &[u8], scale: i64) -> i64 {
+pub fn unsigned_linear11_scaled(bytes: &[u8], scale: i64) -> i64 {
     let raw = u16::from_le_bytes([bytes[0], bytes[1]]);
     let exponent = (raw as i16 >> 11) as i32;
     let mantissa = i64::from(raw & 0x7ff);
@@ -79,7 +79,7 @@ pub fn decode_telemetry(report: &[u8], family: Family) -> Result<Telemetry> {
         "this family requires its own qualified telemetry decoder"
     );
     let d = response(report, READ, 0xe0, 44)?;
-    let value = |offset, scale| msi_scaled(&d[offset..offset + 2], scale);
+    let value = |offset, scale| unsigned_linear11_scaled(&d[offset..offset + 2], scale);
     let currents = (0..2)
         .map(|c| std::array::from_fn(|i| value(6 + c * 12 + i * 2, 1000)))
         .collect();
@@ -143,7 +143,9 @@ pub fn decode_safeguards(report: &[u8]) -> Result<Vec<FaultSnapshot>> {
                 status_raw: p[0],
                 runtime_seconds: u32::from_le_bytes(p[1..5].try_into().unwrap()),
                 lifetime_seconds: u32::from_le_bytes(p[5..9].try_into().unwrap()),
-                currents_ma: std::array::from_fn(|i| msi_scaled(&p[9 + i * 2..11 + i * 2], 1000)),
+                currents_ma: std::array::from_fn(|i| {
+                    unsigned_linear11_scaled(&p[9 + i * 2..11 + i * 2], 1000)
+                }),
             }
         })
         .collect())
@@ -164,9 +166,18 @@ mod tests {
     }
     #[test]
     fn vendor_numeric_boundaries() {
-        assert_eq!(msi_scaled(&0x07ffu16.to_le_bytes(), 1000), 2_047_000);
-        assert_eq!(msi_scaled(&0xf801u16.to_le_bytes(), 1000), 500);
-        assert_eq!(msi_scaled(&0x8001u16.to_le_bytes(), 1_000_000), 15);
+        assert_eq!(
+            unsigned_linear11_scaled(&0x07ffu16.to_le_bytes(), 1000),
+            2_047_000
+        );
+        assert_eq!(
+            unsigned_linear11_scaled(&0xf801u16.to_le_bytes(), 1000),
+            500
+        );
+        assert_eq!(
+            unsigned_linear11_scaled(&0x8001u16.to_le_bytes(), 1_000_000),
+            15
+        );
     }
     #[test]
     fn unknown_safeguard_is_preserved() {

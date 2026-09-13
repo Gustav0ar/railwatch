@@ -14,7 +14,7 @@ use std::{
     sync::mpsc::{self, SyncSender},
     time::Duration,
 };
-pub const INTERFACE: &str = "io.github.msipsu.Monitor1";
+pub const INTERFACE: &str = "io.github.railwatch.Monitor1";
 pub const MAX_REQUEST: u64 = 64 * 1024;
 #[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -101,7 +101,7 @@ impl Service {
         if request.method == "org.varlink.service.GetInfo" {
             let _: Empty = params(p)?;
             return Ok(
-                json!({"vendor":"MSI PSU community project","product":"msi-psud","version":env!("CARGO_PKG_VERSION"),"url":"https://github.com","interfaces":[INTERFACE]}),
+                json!({"vendor":"Railwatch community project","product":"railwatchd","version":env!("CARGO_PKG_VERSION"),"url":"https://github.com/Gustav0ar/railwatch","interfaces":[INTERFACE]}),
             );
         }
         if request.method == "org.varlink.service.GetInterfaceDescription" {
@@ -113,7 +113,7 @@ impl Service {
             let n: Name = params(p)?;
             ensure!(n.interface == INTERFACE, "unknown interface");
             return Ok(
-                json!({"description":include_str!("../interfaces/io.github.msipsu.Monitor1.varlink")}),
+                json!({"description":include_str!("../interfaces/io.github.railwatch.Monitor1.varlink")}),
             );
         }
         let method = request

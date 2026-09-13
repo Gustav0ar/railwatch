@@ -4,15 +4,15 @@ fn panel_widget_and_service_in_luau_vm() {
     for (mode, source) in [
         (
             "panel",
-            include_str!("../clients/noctalia/msi-psu/panel.luau"),
+            include_str!("../clients/noctalia/railwatch/panel.luau"),
         ),
         (
             "widget",
-            include_str!("../clients/noctalia/msi-psu/widget.luau"),
+            include_str!("../clients/noctalia/railwatch/widget.luau"),
         ),
         (
             "service",
-            include_str!("../clients/noctalia/msi-psu/service.luau"),
+            include_str!("../clients/noctalia/railwatch/service.luau"),
         ),
     ] {
         let lua = mlua::Lua::new();

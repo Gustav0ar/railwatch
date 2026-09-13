@@ -1,18 +1,18 @@
 [Unit]
-Description=MSI PSU telemetry and history
+Description=Railwatch telemetry and history
 After=systemd-udevd.service
 
 [Service]
 Type=simple
-User=msi-psu
-Group=msi-psu-read
-SupplementaryGroups=msi-psu msi-psu-control
-ExecStart=/usr/bin/msi-psud --control-group msi-psu-control
+User=railwatch
+Group=railwatch-read
+SupplementaryGroups=railwatch railwatch-control
+ExecStart=/usr/bin/railwatchd --control-group railwatch-control
 Restart=on-failure
 RestartSec=3
-RuntimeDirectory=msi-psu
+RuntimeDirectory=railwatch
 RuntimeDirectoryMode=0750
-StateDirectory=msi-psu
+StateDirectory=railwatch
 StateDirectoryMode=0700
 UMask=0077
 NoNewPrivileges=yes

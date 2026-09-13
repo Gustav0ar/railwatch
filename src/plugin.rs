@@ -55,7 +55,7 @@ fn connected(
     delivered: &mut usize,
     output: &mut impl Write,
 ) -> Result<()> {
-    let mut stream = UnixStream::connect(socket).context("connect to msi-psud")?;
+    let mut stream = UnixStream::connect(socket).context("connect to railwatchd")?;
     stream.set_read_timeout(Some(Duration::from_secs(5)))?;
     stream.set_write_timeout(Some(Duration::from_secs(2)))?;
     ipc::send(
@@ -66,7 +66,7 @@ fn connected(
     let mut next_history = Instant::now();
     loop {
         let bytes =
-            ipc::read_frame(&mut reader, 4 * 1024 * 1024)?.context("msi-psud disconnected")?;
+            ipc::read_frame(&mut reader, 4 * 1024 * 1024)?.context("railwatchd disconnected")?;
         let reply: Value = serde_json::from_slice(&bytes)?;
         ensure!(reply.get("error").is_none(), "daemon error: {reply}");
         let mut data = reply.get("parameters").context("missing snapshot")?.clone();

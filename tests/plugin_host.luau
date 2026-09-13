@@ -3,7 +3,7 @@ local mode = TEST_MODE
 local values, watchers, tree = {}, {}, nil
 local callback
 local mock = {snapshot = {connected = true, device = {model = "MPG Ai1600TS"}, active_incidents = {}, telemetry = {session_id="s",sequence=1,power_uw=180000000,temperature_mc=52000,efficiency_millipercent=81625,fan={rpm=400},connector_currents_ma={{0,0,0,0,0,0},{375,375,375,375,375,437}}}}, stale = false}
-values["msi-psu.snapshot"] = mock
+values["railwatch.snapshot"] = mock
 local function contains(node, text)
     if type(node) ~= "table" then return false end
     if node.props and type(node.props.text)=="string" and node.props.text:find(text,1,true) then return true end
@@ -17,11 +17,11 @@ panel = {render=function(t)tree=t end}
 load_entry()
 if mode=="panel" then
     onOpen();assert(contains(tree,"Connector 2"));assert(contains(tree,"No load observed"));assert(contains(tree,"180.0 W output"));assert(contains(tree,"No incidents recorded."))
-    mock.stale=true;watchers["msi-psu.snapshot"](mock);assert(contains(tree,"Readings are frozen"))
-    mock.snapshot.active_incidents={{id="incident",message="Current imbalance",severity="critical"}};watchers["msi-psu.snapshot"](mock);assert(contains(tree,"Current imbalance"));onClose()
+    mock.stale=true;watchers["railwatch.snapshot"](mock);assert(contains(tree,"Readings are frozen"))
+    mock.snapshot.active_incidents={{id="incident",message="Current imbalance",severity="critical"}};watchers["railwatch.snapshot"](mock);assert(contains(tree,"Current imbalance"));onClose()
 elseif mode=="widget" then
-    update();assert(contains(tree,"180 W"));mock.stale=true;watchers["msi-psu.snapshot"](mock);assert(contains(tree,"stale"));mock.snapshot.active_incidents={{}};watchers["msi-psu.snapshot"](mock);assert(contains(tree,"1 alerts"))
+    update();assert(contains(tree,"180 W"));mock.stale=true;watchers["railwatch.snapshot"](mock);assert(contains(tree,"stale"));mock.snapshot.active_incidents={{}};watchers["railwatch.snapshot"](mock);assert(contains(tree,"1 alerts"))
 elseif mode=="service" then
-    assert(callback);callback({kind="snapshot",data=mock});assert(values["msi-psu.snapshot"]==mock);assert(#values["msi-psu.series"]==1);callback({kind="snapshot",data=mock});assert(#values["msi-psu.series"]==1);callback({kind="offline",message="lost"});assert(values["msi-psu.snapshot"].stale==true)
+    assert(callback);callback({kind="snapshot",data=mock});assert(values["railwatch.snapshot"]==mock);assert(#values["railwatch.series"]==1);callback({kind="snapshot",data=mock});assert(#values["railwatch.series"]==1);callback({kind="offline",message="lost"});assert(values["railwatch.snapshot"].stale==true)
 else error("unknown test") end
 print(mode .. " behavior passed")

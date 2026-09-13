@@ -1,6 +1,6 @@
 use anyhow::{Context, Result, ensure};
 use clap::{Parser, Subcommand, ValueEnum};
-use msi_psu::{
+use railwatch::{
     alerts::Policy,
     device::{HidDevice, discover},
     history::{Tariff, parse_price},
@@ -16,15 +16,15 @@ use std::{
 #[derive(Parser)]
 #[command(
     version,
-    about = "MSI PSU monitoring, incidents, and energy costs",
-    long_about = "All PSU access belongs to msi-psud. Prices are per kWh. Costs use estimated wall input; incomplete coverage remains visible."
+    about = "Railwatch monitoring, incidents, and energy costs",
+    long_about = "All PSU access belongs to railwatchd. Prices are per kWh. Costs use estimated wall input; incomplete coverage remains visible."
 )]
 struct Cli {
     #[arg(
         long,
         global = true,
-        env = "MSI_PSU_RUNTIME_DIR",
-        default_value = "/run/msi-psu"
+        env = "RAILWATCH_RUNTIME_DIR",
+        default_value = "/run/railwatch"
     )]
     runtime_dir: PathBuf,
     #[arg(long, global = true)]
@@ -63,7 +63,7 @@ enum Command {
     /// Desktop notification worker, sound test, silence, and delivery history.
     Notify {
         #[command(subcommand)]
-        command: msi_psu::notify::NotifyCommand,
+        command: railwatch::notify::NotifyCommand,
     },
     /// Discover supported USB identities without opening a device.
     Discover,
@@ -232,8 +232,8 @@ fn main() -> Result<()> {
     let control = c.runtime_dir.join("control.sock");
     let result = match c.command {
         Command::PluginStream { count, timezone } => {
-            let timezone = msi_psu::calendar::timezone(timezone.as_deref())?;
-            msi_psu::plugin::stream(
+            let timezone = railwatch::calendar::timezone(timezone.as_deref())?;
+            railwatch::plugin::stream(
                 &monitor,
                 timezone.name(),
                 count,
@@ -242,7 +242,7 @@ fn main() -> Result<()> {
             return Ok(());
         }
         Command::Notify { command } => {
-            msi_psu::notify::run(command, &c.runtime_dir)?;
+            railwatch::notify::run(command, &c.runtime_dir)?;
             return Ok(());
         }
         Command::Discover => serde_json::to_value(discover()?)?,
@@ -339,7 +339,7 @@ fn main() -> Result<()> {
         Command::Interface => {
             println!(
                 "{}",
-                include_str!("../../interfaces/io.github.msipsu.Monitor1.varlink")
+                include_str!("../../interfaces/io.github.railwatch.Monitor1.varlink")
             );
             return Ok(());
         }

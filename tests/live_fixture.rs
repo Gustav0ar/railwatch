@@ -1,4 +1,4 @@
-use msi_psu::{
+use railwatch::{
     model::Family,
     protocol::{READ, decode_safeguards, decode_telemetry, response},
 };

@@ -42,7 +42,7 @@ pub fn discover() -> Result<Vec<Discovery>> {
             model: data
                 .lines()
                 .find_map(|l| l.strip_prefix("HID_NAME="))
-                .unwrap_or("MSI PSU")
+                .unwrap_or("Railwatch")
                 .into(),
             driver: fs::read_link(device.join("driver"))?
                 .file_name()
@@ -130,9 +130,9 @@ impl HidDevice {
         device.info.revision = Some(String::from_utf8_lossy(p).into());
         let serial = device.info.serial.as_deref().filter(|s| !s.is_empty());
         device.info.id = match serial {
-            Some(s) => format!("msi-{:04x}-{s}", d.pid),
+            Some(s) => format!("usb-0db0-{:04x}-{s}", d.pid),
             None => format!(
-                "msi-{:04x}-{}",
+                "usb-0db0-{:04x}-{}",
                 d.pid,
                 d.path.file_name().unwrap().to_string_lossy()
             ),

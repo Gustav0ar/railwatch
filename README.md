@@ -1,12 +1,19 @@
-# MSI PSU for Linux
+# Railwatch for Linux
 
-A local daemon, CLI, desktop notifier, native Slint application, and Noctalia v5 plugin for MSI PSU monitoring.
+A local daemon, CLI, desktop notifier, native Slint application, and Noctalia v5 plugin for PSU monitoring.
+
+This is an independent community project. It has no affiliation with MSI and is not sponsored, endorsed, or supported by MSI. Product names identify compatible hardware only.
 
 The daemon owns the HID connection. All clients read its cache and SQLite history. Energy is recorded before an electricity price is configured; a dated price can calculate costs for previously recorded consumption.
 
-## Current hardware scope
+## Supported PSUs
 
-Live validation uses the MPG Ai1600TS, USB `0db0:808c`. The TS profile also recognizes Ai1300TS `0db0:aa6f`, but that model still needs a hardware qualification run. T and P families are discovered and explicitly rejected for telemetry because their layouts differ.
+| PSU | USB ID | Support status |
+| --- | --- | --- |
+| MPG Ai1600TS | `0db0:808c` | Monitoring validated on real hardware, including reboot and a move to another USB header. |
+| Ai1300TS | `0db0:aa6f` | Recognized by the TS decoder; not yet validated on real hardware. |
+
+T and P families are detected but unsupported for telemetry because their layouts differ. Recognition alone does not establish support.
 
 Available readings include output power, efficiency, temperature, fan RPM, requested/calculated/actual fan duty, zero-fan state, DC rails, twelve conductor currents, hardware alarms, fault snapshots, runtime counters, and raw safeguard configuration.
 
@@ -21,27 +28,27 @@ cargo build --locked
 cargo build --locked --manifest-path clients/gui/Cargo.toml
 
 # Terminal 1: isolated simulator with a fault after five samples.
-./target/debug/msi-psud --simulate --fault-after 5 \
+./target/debug/railwatchd --simulate --fault-after 5 \
   --runtime-dir .runtime/demo --database .runtime/demo.db
 
 # Terminal 2
-export MSI_PSU_RUNTIME_DIR="$PWD/.runtime/demo"
-./target/debug/msi-psu status
-./target/debug/msi-psu watch --json --count 5
-./target/debug/msi-psu incidents --active
-./clients/gui/target/debug/msi-psu-gui
+export RAILWATCH_RUNTIME_DIR="$PWD/.runtime/demo"
+./target/debug/railwatch status
+./target/debug/railwatch watch --json --count 5
+./target/debug/railwatch incidents --active
+./clients/gui/target/debug/railwatch-gui
 ```
 
-For a connected PSU, omit `--simulate` and select `--device /dev/hidrawN`. Use `msi-psu discover` first. HID read commands require opening the descriptor for both reading and writing. Another raw client or an MSI-specific kernel driver must not own the same device.
+For a connected PSU, omit `--simulate` and select `--device /dev/hidrawN`. Use `railwatch discover` first. HID read commands require opening the descriptor for both reading and writing. Another raw client or a PSU-specific kernel driver must not own the same device.
 
 ## Record electricity costs
 
-Use `msi-psu devices` to find the stable device ID. Prices are per **kWh**, with up to six decimal places. Effective times and query boundaries must align to a minute. Times accept RFC3339 with an explicit offset, or Unix milliseconds.
+Use `railwatch devices` to find the stable device ID. Prices are per **kWh**, with up to six decimal places. Effective times and query boundaries must align to a minute. Times accept RFC3339 with an explicit offset, or Unix milliseconds.
 
 ```sh
-msi-psu tariff set --price 1.00 --currency BRL \
+railwatch tariff set --price 1.00 --currency BRL \
   --effective 2026-09-01T00:00:00-03:00
-msi-psu energy --device-id demo-ai1600ts \
+railwatch energy --device-id demo-ai1600ts \
   --from 2026-09-01T00:00:00-03:00 --to 2026-10-01T00:00:00-03:00 \
   --period day --timezone America/Sao_Paulo --csv september.csv
 ```
@@ -52,18 +59,18 @@ DC output is measured by the PSU. Wall input is estimated as output divided by r
 
 ## Alerts and sound
 
-Hardware alarms are immediate. The software imbalance rule requires sufficient connector load, percentage deviation, absolute spread, a trigger duration, and recovery hysteresis. Defaults are 6 A total, 40% deviation, 0.5 A spread, 3 seconds to trigger and 5 seconds to recover. These are advisory comparison defaults, not qualified MSI protection limits. An unloaded connector is quiet. Sensor numbering is not a verified physical pin diagram.
+Hardware alarms are immediate. The software imbalance rule requires sufficient connector load, percentage deviation, absolute spread, a trigger duration, and recovery hysteresis. Defaults are 6 A total, 40% deviation, 0.5 A spread, 3 seconds to trigger and 5 seconds to recover. These are advisory comparison defaults, not qualified hardware protection limits. An unloaded connector is quiet. Sensor numbering is not a verified physical pin diagram.
 
 ```sh
-msi-psu policy get
-msi-psu policy set policy.json --expected-revision 0
-msi-psu incidents --active
-msi-psu evidence INCIDENT_ID --json
-msi-psu acknowledge INCIDENT_ID
-msi-psu notify run
-msi-psu notify test
-msi-psu notify silence --minutes 15
-msi-psu notify status
+railwatch policy get
+railwatch policy set policy.json --expected-revision 0
+railwatch incidents --active
+railwatch evidence INCIDENT_ID --json
+railwatch acknowledge INCIDENT_ID
+railwatch notify run
+railwatch notify test
+railwatch notify silence --minutes 15
+railwatch notify status
 ```
 
 `policy set` accepts the policy object from `policy get`, excluding the surrounding revision wrapper. The revision prevents lost updates.
@@ -73,10 +80,10 @@ The notifier uses the desktop notification service through `notify-send` and Pip
 ## Clients and packaging
 
 - `clients/gui`: the selected connector-focused native desktop UI. Live overview, calendar energy queries, dated tariffs, incidents, evidence summaries, cooling inspection, and exports. Deep links accept `--incident ID`.
-- `clients/noctalia`: a source catalog and Luau plugin for Noctalia v5, plugin API 9. One persistent `msi-psu plugin-stream` Rust process supplies live snapshots, energy and incidents. It does not poll HID or produce duplicate sounds.
+- `clients/noctalia`: a source catalog and Luau plugin for Noctalia v5, plugin API 9. One persistent `railwatch plugin-stream` Rust process supplies live snapshots, energy and incidents. It does not poll HID or produce duplicate sounds.
 - `packaging`: systemd, udev, sysusers, desktop entry and an Arch package recipe. See [installation](docs/installation.md) before installing.
 
-These components currently share one development checkout. The Noctalia catalog can be published separately. The GUI imports the Rust client/model library by path; extract and version that library before splitting the GUI into a separate repository. No GitHub repositories or releases have been published.
+Source repository: [Gustav0ar/railwatch](https://github.com/Gustav0ar/railwatch). The daemon, CLI, GUI and Noctalia plugin share this repository. The Noctalia catalog can be published separately. The GUI imports the Rust client/model library by path; extract and version that library before splitting the GUI into a separate repository. No release has been published.
 
 ## Verify
 

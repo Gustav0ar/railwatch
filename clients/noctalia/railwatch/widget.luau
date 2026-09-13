@@ -1,5 +1,5 @@
 --!nonstrict
-local snapshot = noctalia.state.get("msi-psu.snapshot")
+local snapshot = noctalia.state.get("railwatch.snapshot")
 local function render()
     local s = snapshot and snapshot.snapshot or nil
     local t = s and s.telemetry or nil
@@ -15,6 +15,6 @@ local function render()
     barWidget.render((barWidget.isVertical() and ui.column or ui.row)({gap = 6, align = "center"}, children))
     barWidget.setTooltip(stale and "PSU monitoring interrupted" or (#active > 0 and "PSU incidents need attention" or "Open PSU connector monitoring"))
 end
-function onClick() noctalia.togglePanel("gustav0ar/msi-psu:dashboard") end
-noctalia.state.watch("msi-psu.snapshot", function(value) snapshot = value; render() end)
+function onClick() noctalia.togglePanel("gustav0ar/railwatch:dashboard") end
+noctalia.state.watch("railwatch.snapshot", function(value) snapshot = value; render() end)
 function update() noctalia.setUpdateInterval(1000); render() end

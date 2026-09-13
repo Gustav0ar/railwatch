@@ -455,7 +455,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "msi-psu"
+name = "railwatch"
 version = "0.1.0"
 dependencies = [
  "anyhow",

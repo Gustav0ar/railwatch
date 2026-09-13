@@ -1,5 +1,0 @@
-u msi-psu - "MSI PSU daemon" /var/lib/msi-psu
-g msi-psu-read -
-g msi-psu-control -
-m msi-psu msi-psu-read
-m msi-psu msi-psu-control

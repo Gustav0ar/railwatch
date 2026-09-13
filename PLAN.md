@@ -1,6 +1,6 @@
-# MSI PSU Linux implementation plan
+# Railwatch Linux implementation plan
 
-> Implementation status, 2026-09-13: the local Rust daemon/CLI, history and pricing, incident engine, desktop notifier, selected native GUI and Noctalia v5 Luau client are implemented. See [validation](docs/validation.md) for checks, the Ai1600TS hardware run, optimized resource measurements and actual Noctalia/GUI interaction in an isolated headless session. Design A was selected after local browser review. System installation, remaining hardware control qualification, repository publication and kernel work are still separate milestones.
+> Implementation status, 2026-09-13: the Rust daemon/CLI, history and pricing, incident engine, desktop notifier, selected native GUI and Noctalia v5 Luau client are implemented and installed. The daemon and notifier are enabled, and the plugin is active in the user's Noctalia session. See [validation](docs/validation.md) for installed-system checks, the Ai1600TS hardware run, optimized resource measurements and actual Noctalia/GUI interaction in an isolated headless session. Design A was selected after local browser review. Remaining hardware control qualification, repository publication and kernel work are separate milestones.
 
 
 Prepared on 2026-09-12 from the archived Windows analysis, Linux prototypes, Windows screenshots, local WireView projects, and current upstream documentation.
@@ -52,24 +52,24 @@ Use three repositories, with the CLI beside the daemon. Stage kernel patches in 
 
 | Proposed repository | Contents | Release boundary |
 | --- | --- | --- |
-| `msi-psu` | `msi-psud`, `msi-psu` CLI, protocol fixtures, typed IPC contract and Rust client crate, history, alert engine, session notifier, systemd and distro packaging, kernel patch staging | One version for the daemon, CLI, notifier, and contract artifacts. |
-| `noctalia-msi-psu` | Noctalia service, bar widget, panel, settings, persistent transport adapter, demo data | Independently released plugin with a declared daemon API range. |
-| `msi-psu-gui` | Native desktop app, charts, history explorer, controls, desktop packaging | Independently released application using the published IPC client. |
+| `railwatch` | `railwatchd`, `railwatch` CLI, protocol fixtures, typed IPC contract and Rust client crate, history, alert engine, session notifier, systemd and distro packaging, kernel patch staging | One version for the daemon, CLI, notifier, and contract artifacts. |
+| `noctalia-railwatch` | Noctalia service, bar widget, panel, settings, persistent transport adapter, demo data | Independently released plugin with a declared daemon API range. |
+| `railwatch-gui` | Native desktop app, charts, history explorer, controls, desktop packaging | Independently released application using the published IPC client. |
 
 The existing [WireView daemon architecture](/home/gustavo/Code/personal/tools/wireview-pro-ii/wireviewd/README.md), [Varlink contract](/home/gustavo/Code/personal/tools/wireview-pro-ii/wireviewd/docs/varlink.md), and [Noctalia transport](/home/gustavo/Code/personal/tools/wireview-pro-ii/wireview-pro-ii/README.md) are useful precedents. Reuse their patterns and suitable small components with attribution. Avoid introducing a generic multi-vendor daemon framework before a second implementation actually needs it.
 
 Recommended stack: Rust for the daemon and CLI, SQLite for local storage, Varlink over Unix sockets for IPC, QML for Noctalia, and Rust with Slint for the standalone GUI. Slint follows the [existing WireView desktop decision](/home/gustavo/Code/personal/tools/wireview-pro-ii/wireviewd/docs/adr/0002-slint-rust-desktop.md). Confirm its packaging and licensing requirements when scaffolding the GUI. A web frontend remains an alternative if its charting benefits justify a second UI stack.
 
-Before publishing, select licenses for our implementation and the IPC crate. Use a Linux-compatible SPDX license for kernel contributions. Preserve the provenance of protocol facts and fixtures. Publish our implementation and redacted captures rather than bundling MSI binaries or copying decompiled application code into the driver.
+Before publishing, select licenses for our implementation and the IPC crate. Use a Linux-compatible SPDX license for kernel contributions. Preserve the provenance of protocol facts and fixtures. Publish our implementation and redacted captures rather than bundling vendor binaries or copying decompiled application code into the driver.
 
 ## Keep one owner of hardware communication
 
 ```mermaid
 flowchart TD
-    PSU[MSI PSU USB HID] --> BACKEND[One active backend per device]
+    PSU[Railwatch USB HID] --> BACKEND[One active backend per device]
     RAW[Initial backend: hidraw] --> BACKEND
     KERNEL[Later backend: kernel hwmon and agreed extensions] --> BACKEND
-    BACKEND --> DAEMON[msi-psud]
+    BACKEND --> DAEMON[railwatchd]
     DAEMON --> STORE[SQLite history and incidents]
     DAEMON --> IPC[Versioned local Varlink API]
     IPC --> CLI[CLI]
@@ -109,7 +109,7 @@ Keep databases in the service state directory and sockets in its runtime directo
 
 ### A stable API for every client
 
-Use a versioned [Varlink interface](https://varlink.org/) following the local WireView precedent. Ship its schema and typed Rust client from the core repository. Noctalia uses Luau and one persistent Rust `msi-psu plugin-stream` process. No Python runtime is part of the implementation, and clients do not spawn a fresh process for every reading.
+Use a versioned [Varlink interface](https://varlink.org/) following the local WireView precedent. Ship its schema and typed Rust client from the core repository. Noctalia uses Luau and one persistent Rust `railwatch plugin-stream` process. No Python runtime is part of the implementation, and clients do not spawn a fresh process for every reading.
 
 The first contract needs these operation groups:
 
@@ -199,9 +199,9 @@ Use two sources of incidents:
 
 For software imbalance, use the load gate, thresholds, an elapsed trigger duration, lower clear thresholds, and a recovery duration. Other rules use the conditions appropriate to their measurement. Evaluate fresh unrounded values, independently of chart smoothing. Separate warning and critical policies. A gap resets a pending trigger timer. Unknown or stale measurements must not clear an existing incident. Sustained valid low-load readings may mark recovery, with the event recording that the load fell rather than implying that the cable was repaired.
 
-The local WireView implementation exposes a 40% imbalance threshold and a 6 A minimum-load default. Those are useful comparison points, not validated MSI defaults. It also omits imbalance from its default buzzer mask. Define our sound policy explicitly instead of copying that omission. [WireView configuration](/home/gustavo/Code/personal/tools/wireview-pro-ii/wireviewd/docs/usage.md:200), [default alarm actions](/home/gustavo/Code/personal/tools/wireview-pro-ii/wireviewd/crates/wireview-core/src/config.rs:475)
+The local WireView implementation exposes a 40% imbalance threshold and a 6 A minimum-load default. Those are useful comparison points, not validated hardware defaults. It also omits imbalance from its default buzzer mask. Define our sound policy explicitly instead of copying that omission. [WireView configuration](/home/gustavo/Code/personal/tools/wireview-pro-ii/wireviewd/docs/usage.md:200), [default alarm actions](/home/gustavo/Code/personal/tools/wireview-pro-ii/wireviewd/crates/wireview-core/src/config.rs:475)
 
-Qualify MSI software thresholds with idle, normal sustained load, load transitions, unused connectors, capture replay, and measurement uncertainty. Do not discover thresholds by deliberately creating a dangerous cable condition. Hardware alarm forwarding can ship before optional software thresholds are qualified.
+Qualify software thresholds with idle, normal sustained load, load transitions, unused connectors, capture replay, and measurement uncertainty. Do not discover thresholds by deliberately creating a dangerous cable condition. Hardware alarm forwarding can ship before optional software thresholds are qualified.
 
 ### Incidents should explain what happened
 
@@ -217,7 +217,7 @@ Deduplicate repeated hardware snapshots across reconnects using available device
 
 ### Deliver sound and notifications in the user session
 
-Ship a small `msi-psu-notify` user service with the core package. It subscribes to incidents and calls the desktop notification service on the session bus. This avoids trying to send desktop notifications from a system daemon. The [Freedesktop specification](https://specifications.freedesktop.org/notification/latest-single/) describes this session-scoped service.
+Ship a small `railwatch-notify` user service with the core package. It subscribes to incidents and calls the desktop notification service on the session bus. This avoids trying to send desktop notifications from a system daemon. The [Freedesktop specification](https://specifications.freedesktop.org/notification/latest-single/) describes this session-scoped service.
 
 Use this notifier as the single desktop sound owner. Noctalia and the GUI show the same incident and acknowledgement state but do not independently sound alarms. Enforce a single notifier instance per user and deduplicate by incident and escalation level. Route audible output to the active session and retain events for later sessions.
 
@@ -227,7 +227,7 @@ Keep the PSU's autonomous alarm behavior separate. `0xC2` is currently an unreso
 
 ## Reach Windows feature parity, then improve it
 
-The archived [main view](/media/gustavo/APPS/msi-psu-linux/docs/screenshots/msi_center_psu_main.png) and [real-time dashboard](/media/gustavo/APPS/msi-psu-linux/docs/screenshots/msi_center_psu_realtime_dashboard.png) establish live power, efficiency, temperature, rail readings, conductor currents, recent graphs, energy totals, activity, and CSV export. MSI also advertises zero-fan and customized cooling settings. [MSI product page](https://www.msi.com/Power-Supply/MPG-Ai1600TS-PCIE5)
+The archived [main view](/media/gustavo/APPS/msi-psu-linux/docs/screenshots/msi_center_psu_main.png) and [real-time dashboard](/media/gustavo/APPS/msi-psu-linux/docs/screenshots/msi_center_psu_realtime_dashboard.png) establish live power, efficiency, temperature, rail readings, conductor currents, recent graphs, energy totals, activity, and CSV export. The vendor also advertises zero-fan and customized cooling settings. [Vendor product page](https://www.msi.com/Power-Supply/MPG-Ai1600TS-PCIE5)
 
 | Workflow | Linux plan |
 | --- | --- |
@@ -266,9 +266,9 @@ The kernel contribution is a small HID-backed hwmon driver, initially written in
 
 The existing [upstream plan](/media/gustavo/APPS/msi-psu-linux/docs/HWMON_KERNEL_UPSTREAM_PLAN.md) correctly identifies hwmon as the target, but its `/run/hwmon` export and proposed vendor attributes are not an upstream ABI. Ordinary files under `/run` do not register a sensor with `lm-sensors`.
 
-The current upstream hwmon directory checked through `gh` contains `corsair-psu.c` and no file named `msi-psu.c`. The inspected liquidctl MSI module handles liquid coolers. This is a narrow duplication check, not proof that no external MSI PSU work exists. Search pending hwmon patches and additional implementations before starting the driver.
+The current upstream hwmon directory checked through `gh` contains `corsair-psu.c` and no matching driver. The inspected liquidctl vendor module handles liquid coolers. This is a narrow duplication check, not proof that no external driver work exists. Search pending hwmon patches and additional implementations before starting the driver.
 
-Use the [Corsair PSU driver](https://docs.kernel.org/hwmon/corsair-psu.html) as a HID integration reference. Establish the MSI report format independently. Use a transaction lock, bounded completion waits, echo validation, correct disconnect handling, and a shared telemetry cache. Register channels through `devm_hwmon_device_register_with_info()` and expose capabilities through visibility callbacks. [Kernel hwmon API](https://docs.kernel.org/hwmon/hwmon-kernel-api.html)
+Use the [Corsair PSU driver](https://docs.kernel.org/hwmon/corsair-psu.html) as a HID integration reference. Establish the vendor report format independently. Use a transaction lock, bounded completion waits, echo validation, correct disconnect handling, and a shared telemetry cache. Register channels through `devm_hwmon_device_register_with_info()` and expose capabilities through visibility callbacks. [Kernel hwmon API](https://docs.kernel.org/hwmon/hwmon-kernel-api.html)
 
 The first RFC should cover validated telemetry and the corresponding known hardware limits and alarms. Add writable fan support after its mapping and failure behavior are established. Proposed TS channels are:
 
@@ -291,7 +291,7 @@ The kernel must serialize every operation that reaches the device. A userspace l
 
 Support two explicit deployment modes during development:
 
-1. The daemon owns hidraw and provides the full set of validated userspace features. The MSI-specific kernel driver is not bound.
+1. The daemon owns hidraw and provides the full set of validated userspace features. The vendor-specific kernel driver is not bound.
 2. The kernel owns communication and the daemon consumes hwmon plus any agreed stable extensions. The API reports unavailable advanced capabilities honestly.
 
 Prefer typed, narrowly defined kernel operations for necessary extensions. Decide their ABI with maintainers rather than committing to a private ioctl tunnel. Debugfs can help development but cannot be a required stable GUI interface. [Debugfs documentation](https://docs.kernel.org/filesystems/debugfs.html)
@@ -339,14 +339,14 @@ For the kernel, check integer conversion parity, bounded waits, partial response
 | Monitoring health as a visible state | Distinguishes a healthy PSU from a stopped collector, missing device, full disk, or failed sound delivery. | First release |
 | Exportable diagnostic bundles | Packages redacted identity, versions, protocol capabilities, selected frames, and incident data for support and upstream reports. | Early follow-up |
 | Connector labels and load-binned trends | Lets the user label a connector and compare its current distribution at similar loads across weeks. Warn on drift only after measurement uncertainty is understood. | Early follow-up |
-| GPU power-limit reduction on a critical event | Provides a Linux analogue to MSI's Afterburner integration. Require explicit connector-to-GPU mapping, supported power-limit ranges, and an opt-in policy. | After reliable alert delivery |
+| GPU power-limit reduction on a critical event | Provides a Linux analogue to the vendor’s Afterburner integration. Require explicit connector-to-GPU mapping, supported power-limit ranges, and an opt-in policy. | After reliable alert delivery |
 | Correlate with WireView readings | A later read-only client can align PSU and WireView incident timelines and measurement points. Do not sum overlapping PSU and GPU power or infer cable resistance from unsynchronized readings. | Later |
 | Prometheus and Home Assistant integration | Export cached values, energy counters, event totals, and sample age. Keep HTTP disabled by default and read-only when enabled, with explicit bind configuration. | Later |
 | Cooling diagnostics | Compare requested duty, actual duty, RPM, load, and temperature. Avoid a fan-stall alarm when verified zero-fan behavior explains zero RPM. | Early follow-up |
 | Optional host poweroff policy | An explicitly configured last-resort software action with logged reasons. It cannot replace autonomous PSU protection. | Later |
 | RGB controls | Expose only if compatible hardware and a useful use case justify the additional protocol work. | Low |
 
-MSI documents an Afterburner workflow that reduces the GPU power limit to 75% on a Safeguard alert. Treat this as a parity reference, not a universal Linux setting. A Linux implementation should use an explicitly configured limit and identify the GPU by stable hardware identity. Where supported, NVML provides power-limit control. Keep this optional privileged operation isolated from normal telemetry access. [MSI integration description](https://us.msi.com/blog/msi-gpu-safeguard-msi-afterburner-protect-your-gpu-by-reducing-power-during-abnormal-current), [NVML device commands](https://docs.nvidia.com/deploy/nvml-api/api/group__nvmlDeviceCommands.html)
+The vendor documents an Afterburner workflow that reduces the GPU power limit to 75% on a Safeguard alert. Treat this as a parity reference, not a universal Linux setting. A Linux implementation should use an explicitly configured limit and identify the GPU by stable hardware identity. Where supported, NVML provides power-limit control. Keep this optional privileged operation isolated from normal telemetry access. [Vendor integration description](https://us.msi.com/blog/msi-gpu-safeguard-msi-afterburner-protect-your-gpu-by-reducing-power-during-abnormal-current), [NVML device commands](https://docs.nvidia.com/deploy/nvml-api/api/group__nvmlDeviceCommands.html)
 
 Record the previous limit and avoid raising an already lower limit during mitigation. Keep the reduced limit until an explicit recovery action, and do not overwrite a subsequent change made by another tool. A failed mitigation still leaves the incident active and notifies the user. No PSU current measurement automatically identifies the connected GPU.
 

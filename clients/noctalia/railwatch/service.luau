@@ -20,29 +20,29 @@ local function publish(line)
                 previous = key
                 local copy = {}
                 for _, v in ipairs(series) do table.insert(copy, v) end
-                noctalia.state.set("msi-psu.series", copy)
+                noctalia.state.set("railwatch.series", copy)
             end
         end
-        noctalia.state.set("msi-psu.snapshot", snapshot)
-        noctalia.state.set("msi-psu.error", nil)
+        noctalia.state.set("railwatch.snapshot", snapshot)
+        noctalia.state.set("railwatch.error", nil)
     elseif event.kind == "history" then
-        noctalia.state.set("msi-psu.history", event)
-        noctalia.state.set("msi-psu.history-error", nil)
+        noctalia.state.set("railwatch.history", event)
+        noctalia.state.set("railwatch.history-error", nil)
     elseif event.kind == "history_error" then
-        noctalia.state.set("msi-psu.history-error", event.message)
+        noctalia.state.set("railwatch.history-error", event.message)
     elseif event.kind == "offline" then
-        noctalia.state.set("msi-psu.error", event.message)
-        if snapshot then snapshot.stale = true; noctalia.state.set("msi-psu.snapshot", snapshot) end
+        noctalia.state.set("railwatch.error", event.message)
+        if snapshot then snapshot.stale = true; noctalia.state.set("railwatch.snapshot", snapshot) end
     end
 end
-if not noctalia.runStream("msi-psu plugin-stream", publish) then
-    noctalia.state.set("msi-psu.error", "Could not start the PSU monitor")
+if not noctalia.runStream("railwatch plugin-stream", publish) then
+    noctalia.state.set("railwatch.error", "Could not start the PSU monitor")
 end
 function update()
     noctalia.setUpdateInterval(1000)
     if os.time() - last > 5 and snapshot and not snapshot.stale then
         snapshot.stale = true
-        noctalia.state.set("msi-psu.snapshot", snapshot)
-        noctalia.state.set("msi-psu.error", "Monitoring interrupted. Readings are frozen.")
+        noctalia.state.set("railwatch.snapshot", snapshot)
+        noctalia.state.set("railwatch.error", "Monitoring interrupted. Readings are frozen.")
     end
 end

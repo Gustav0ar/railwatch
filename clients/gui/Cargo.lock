@@ -2850,7 +2850,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "msi-psu"
+name = "railwatch"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -2866,13 +2866,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "msi-psu-gui"
+name = "railwatch-gui"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "chrono",
  "clap",
- "msi-psu",
+ "railwatch",
  "serde_json",
  "slint",
  "slint-build",

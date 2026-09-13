@@ -1,6 +1,6 @@
 use anyhow::{Context, Result, ensure};
 use clap::Parser;
-use msi_psu::{
+use railwatch::{
     ipc::{Service, serve_client},
     runtime::{self, STOP},
 };
@@ -21,11 +21,11 @@ use std::{
     time::Duration,
 };
 #[derive(Parser)]
-#[command(version, about = "MSI PSU telemetry and history daemon")]
+#[command(version, about = "Railwatch telemetry and history daemon")]
 struct Args {
-    #[arg(long, default_value = "/run/msi-psu")]
+    #[arg(long, default_value = "/run/railwatch")]
     runtime_dir: PathBuf,
-    #[arg(long, default_value = "/var/lib/msi-psu/history.db")]
+    #[arg(long, default_value = "/var/lib/railwatch/history.db")]
     database: PathBuf,
     #[arg(long)]
     device: Option<PathBuf>,
@@ -127,7 +127,7 @@ fn main() -> Result<()> {
     let clients = Arc::new(AtomicUsize::new(0));
     let started = std::time::Instant::now();
     eprintln!(
-        "msi-psud listening on {}{}",
+        "railwatchd listening on {}{}",
         read_path.display(),
         if a.simulate { " (SIMULATED)" } else { "" }
     );

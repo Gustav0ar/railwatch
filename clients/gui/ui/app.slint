@@ -46,11 +46,11 @@ component Connector inherits VerticalBox {
 }
 export component App inherits Window {
     init => {Palette.color-scheme = ColorScheme.dark;}
-    title: "MSI PSU"; background: #000; preferred-width: 1220px; preferred-height: 850px; min-width: 900px; min-height: 620px;
+    title: "Railwatch"; background: #000; preferred-width: 1220px; preferred-height: 850px; min-width: 900px; min-height: 620px;
     default-font-family: "Adwaita Sans"; default-font-size: 15px;
     in-out property <int> page: 0;
-    in-out property <string> device-name: "MSI PSU";
-    in-out property <string> status: "Connecting to msi-psud";
+    in-out property <string> device-name: "Railwatch";
+    in-out property <string> status: "Connecting to railwatchd";
     in-out property <bool> stale: true;
     in-out property <string> problem;
     in-out property <string> watts: "Unavailable";
@@ -106,7 +106,7 @@ export component App inherits Window {
                     clicked => {root.page=index; if index==2 {root.refresh-incidents();} if index==3 {root.inspect();}}
                 }
                 Rectangle { vertical-stretch: 1; }
-                Text { vertical-stretch: 0; text: "MSI PSU\nLocal monitoring"; color: #b0b0b0; wrap: word-wrap; font-size: 13px; }
+                Text { vertical-stretch: 0; text: "Railwatch\nLocal monitoring"; color: #b0b0b0; wrap: word-wrap; font-size: 13px; }
             }
             Rectangle { width: 1px; background: #272727; }
             ScrollView { horizontal-stretch: 1;
@@ -197,7 +197,7 @@ export component App inherits Window {
                         Heading { text: "Device & service"; }
                         for row in root.device-rows: Label { text: row; wrap: word-wrap; }
                         Rule {}
-                        Label { text: "Software imbalance alerts use a load gate, hysteresis and duration. Configure the full policy with msi-psu policy. Hardware alarms remain independent."; wrap: word-wrap; }
+                        Label { text: "Software imbalance alerts use a load gate, hysteresis and duration. Configure the full policy with railwatch policy. Hardware alarms remain independent."; wrap: word-wrap; }
                     }
                 }
             }

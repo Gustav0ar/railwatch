@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::Parser;
-use msi_psu::{
+use railwatch::{
     alerts::imbalance,
     history::{Tariff, parse_price},
     ipc::call,
@@ -21,7 +21,7 @@ slint::include_modules!();
 #[derive(Parser)]
 #[command(version)]
 struct Args {
-    #[arg(long, env = "MSI_PSU_RUNTIME_DIR", default_value = "/run/msi-psu")]
+    #[arg(long, env = "RAILWATCH_RUNTIME_DIR", default_value = "/run/railwatch")]
     runtime_dir: PathBuf,
     #[arg(long)]
     incident: Option<String>,
@@ -88,9 +88,9 @@ fn update_ui(ui: &App, v: &Value, graph: &[f32]) {
     let s = &v["snapshot"];
     let age = s["telemetry"]["monotonic_ms"]
         .as_u64()
-        .map(|at| msi_psu::runtime::monotonic_ms().saturating_sub(at));
+        .map(|at| railwatch::runtime::monotonic_ms().saturating_sub(at));
     let stale = v["stale"].as_bool().unwrap_or(true) || age.is_none_or(|age| age > 3500);
-    ui.set_device_name(s["device"]["model"].as_str().unwrap_or("MSI PSU").into());
+    ui.set_device_name(s["device"]["model"].as_str().unwrap_or("Railwatch").into());
     ui.set_stale(stale);
     ui.set_status(if stale {
         "Monitoring interrupted. Readings are frozen.".into()
@@ -314,13 +314,13 @@ fn bind_actions(ui: &App, tx: mpsc::SyncSender<Action>) {
 }
 fn main() -> Result<()> {
     let args = Args::parse();
-    let timezone = msi_psu::calendar::timezone(args.timezone.as_deref())?;
+    let timezone = railwatch::calendar::timezone(args.timezone.as_deref())?;
     if let Some(path) = args.screenshot {
         return screenshot(path, args.runtime_dir, args.page, timezone.name());
     }
     let ui = App::new()?;
     ui.set_page(args.page);
-    let (start, end) = msi_psu::calendar::today(chrono::Utc::now(), timezone)?;
+    let (start, end) = railwatch::calendar::today(chrono::Utc::now(), timezone)?;
     let today = chrono::DateTime::from_timestamp_millis(start)
         .context("invalid start")?
         .with_timezone(&timezone);
@@ -390,7 +390,7 @@ fn main() -> Result<()> {
                         let _ = updates.deliver(move |ui| update_ui(ui, &v, &g));
                     }
                     Err(e) => {
-                        let message = format!("Cannot connect to msi-psud: {e:#}");
+                        let message = format!("Cannot connect to railwatchd: {e:#}");
                         let _ = updates.deliver(move |ui| {
                             ui.set_stale(true);
                             ui.set_status(message.into());
@@ -399,7 +399,7 @@ fn main() -> Result<()> {
                 }
                 if energy_tick % 10 == 0 && !device.is_empty() {
                     let now = chrono::Utc::now();
-                    let start = msi_psu::calendar::today(now, timezone)
+                    let start = railwatch::calendar::today(now, timezone)
                         .map(|(start, _)| start)
                         .unwrap_or(now.timestamp_millis() / 60000 * 60000);
                     let end = now.timestamp_millis() / 60000 * 60000 + 60000;
@@ -522,7 +522,7 @@ fn main() -> Result<()> {
                                 .map(PathBuf::from)
                                 .context("HOME unavailable")?;
                             let path = dir.join(format!(
-                                "msi-psu-{}.json",
+                                "railwatch-{}.json",
                                 chrono::Utc::now().format("%Y%m%dT%H%M%S%3f")
                             ));
                             std::fs::write(&path, serde_json::to_vec_pretty(&v)?)?;
@@ -530,7 +530,7 @@ fn main() -> Result<()> {
                         }
                     }
                 })();
-                let _=updates.deliver(move|ui|match result{Ok((kind,v))=>match kind.as_str(){"inspect"=>{let raw=v["safeguard_report"].as_array().map(Vec::as_slice).unwrap_or(&[]);let payload=raw.iter().skip(2).take(8).map(Value::to_string).collect::<Vec<_>>().join(", ");ui.set_configuration_detail(format!("Safeguard configuration bytes: {payload}. Timer units and write semantics are unqualified.").into());ui.set_notice("Device settings read successfully.".into());},"energy"=>ui.set_energy_rows(strings(energy_rows(&v))),"incidents"=>ui.set_incidents(incident_rows(&v)),"evidence"=>{let rows=v["samples"].as_array().map(Vec::as_slice).unwrap_or(&[]);ui.set_incident_detail(format!("{} retained readings. First: {}. Last: {}. Export full evidence with msi-psu evidence <incident-id> --json.",rows.len(),rows.first().map(|r|r["captured_at_ms"].to_string()).unwrap_or_default(),rows.last().map(|r|r["captured_at_ms"].to_string()).unwrap_or_default()).into());},_=>ui.set_notice(format!("{kind} {}",if v.is_null(){String::new()}else{v.to_string()}).into())},Err(e)=>ui.set_notice(format!("{e:#}").into())});
+                let _=updates.deliver(move|ui|match result{Ok((kind,v))=>match kind.as_str(){"inspect"=>{let raw=v["safeguard_report"].as_array().map(Vec::as_slice).unwrap_or(&[]);let payload=raw.iter().skip(2).take(8).map(Value::to_string).collect::<Vec<_>>().join(", ");ui.set_configuration_detail(format!("Safeguard configuration bytes: {payload}. Timer units and write semantics are unqualified.").into());ui.set_notice("Device settings read successfully.".into());},"energy"=>ui.set_energy_rows(strings(energy_rows(&v))),"incidents"=>ui.set_incidents(incident_rows(&v)),"evidence"=>{let rows=v["samples"].as_array().map(Vec::as_slice).unwrap_or(&[]);ui.set_incident_detail(format!("{} retained readings. First: {}. Last: {}. Export full evidence with railwatch evidence <incident-id> --json.",rows.len(),rows.first().map(|r|r["captured_at_ms"].to_string()).unwrap_or_default(),rows.last().map(|r|r["captured_at_ms"].to_string()).unwrap_or_default()).into());},_=>ui.set_notice(format!("{kind} {}",if v.is_null(){String::new()}else{v.to_string()}).into())},Err(e)=>ui.set_notice(format!("{e:#}").into())});
             }
         }
     });
@@ -567,8 +567,8 @@ fn screenshot(path: PathBuf, runtime: PathBuf, page: i32, zone: &str) -> Result<
         .as_str()
         .context("no device")?;
     let now = chrono::Utc::now();
-    let timezone = msi_psu::calendar::timezone(Some(zone))?;
-    let (start, _) = msi_psu::calendar::today(now, timezone)?;
+    let timezone = railwatch::calendar::timezone(Some(zone))?;
+    let (start, _) = railwatch::calendar::today(now, timezone)?;
     ui.set_timezone(zone.into());
     let end = now.timestamp_millis() / 60000 * 60000 + 60000;
     let samples = call(
@@ -720,7 +720,7 @@ mod tests {
         assert!(
             matches!(rx.try_recv().unwrap(),Action::Acknowledge(id) if id=="retained-incident")
         );
-        let t = msi_psu::device::simulated_sample(2, true);
+        let t = railwatch::device::simulated_sample(2, true);
         update_ui(
             &app,
             &json!({"stale":true,"age_ms":5000,"snapshot":{"device":{"model":"Test PSU"},"telemetry":t,"active_incidents":[],"storage_error":"disk full"}}),

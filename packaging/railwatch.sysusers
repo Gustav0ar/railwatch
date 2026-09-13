@@ -1,0 +1,5 @@
+u railwatch - "Railwatch daemon" /var/lib/railwatch
+g railwatch-read -
+g railwatch-control -
+m railwatch railwatch-read
+m railwatch railwatch-control

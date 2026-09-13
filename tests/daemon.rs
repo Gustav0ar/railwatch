@@ -1,4 +1,4 @@
-use msi_psu::ipc::{INTERFACE, call, read_frame, send};
+use railwatch::ipc::{INTERFACE, call, read_frame, send};
 use serde_json::json;
 use std::{
     io::BufReader,
@@ -18,7 +18,7 @@ impl Drop for Daemon {
     }
 }
 fn start(dir: &Path, extra: &[&str]) -> Daemon {
-    let child = Command::new(env!("CARGO_BIN_EXE_msi-psud"))
+    let child = Command::new(env!("CARGO_BIN_EXE_railwatchd"))
         .args(["--simulate", "--runtime-dir"])
         .arg(dir.join("run"))
         .arg("--database")
@@ -87,7 +87,7 @@ fn daemon_cli_durability_faults_and_permissions() {
     )
     .unwrap();
     assert!(call(&read, "Energy", q.clone()).unwrap()["buckets"][0]["cost"].is_string());
-    let output = Command::new(env!("CARGO_BIN_EXE_msi-psu"))
+    let output = Command::new(env!("CARGO_BIN_EXE_railwatch"))
         .arg("--runtime-dir")
         .arg(dir.path().join("run"))
         .args(["--json", "watch", "--count", "2"])
@@ -95,7 +95,7 @@ fn daemon_cli_durability_faults_and_permissions() {
         .unwrap();
     assert!(output.status.success());
     assert_eq!(String::from_utf8(output.stdout).unwrap().lines().count(), 2);
-    let output = Command::new(env!("CARGO_BIN_EXE_msi-psu"))
+    let output = Command::new(env!("CARGO_BIN_EXE_railwatch"))
         .arg("--runtime-dir")
         .arg(dir.path().join("run"))
         .args(["plugin-stream", "--count", "2"])
@@ -232,7 +232,7 @@ fn persistent_plugin_stream_reconnects_without_restarting_process() {
     use std::io::BufRead;
     let dir = tempfile::tempdir().unwrap();
     let daemon = start(dir.path(), &[]);
-    let child = Command::new(env!("CARGO_BIN_EXE_msi-psu"))
+    let child = Command::new(env!("CARGO_BIN_EXE_railwatch"))
         .arg("--runtime-dir")
         .arg(dir.path().join("run"))
         .arg("plugin-stream")

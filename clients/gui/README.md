@@ -1,6 +1,6 @@
-# MSI PSU GUI
+# Railwatch GUI
 
-Native Slint client using the connector-focused design selected in the local preview. Build with `cargo build --locked --manifest-path clients/gui/Cargo.toml` from the checkout root. Set `MSI_PSU_RUNTIME_DIR` for an isolated daemon.
+Native Slint client using the connector-focused design selected in the local preview. Build with `cargo build --locked --manifest-path clients/gui/Cargo.toml` from the checkout root. Set `RAILWATCH_RUNTIME_DIR` for an isolated daemon.
 
 The UI uses true black, white text, two six-conductor views, calendar energy queries, dated tariffs, incident history, cooling inspection and current-state export. It uses the same daemon API and calculations as the CLI. Hardware writes remain unavailable pending qualification.
 

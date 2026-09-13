@@ -72,7 +72,7 @@ fn state_dir() -> Result<PathBuf> {
         .map(PathBuf::from)
         .or_else(|| std::env::var_os("HOME").map(|p| PathBuf::from(p).join(".local/state")))
         .context("no user state directory")?;
-    Ok(base.join("msi-psu"))
+    Ok(base.join("railwatch"))
 }
 pub fn run(command: NotifyCommand, runtime: &Path) -> Result<()> {
     let dir = state_dir()?;
@@ -91,7 +91,7 @@ pub fn run(command: NotifyCommand, runtime: &Path) -> Result<()> {
         }
         NotifyCommand::Test { critical } => {
             deliver(
-                "MSI PSU sound test",
+                "Railwatch sound test",
                 "Desktop notification and audio test. No PSU settings changed.",
                 critical,
                 true,
@@ -162,9 +162,9 @@ pub fn run(command: NotifyCommand, runtime: &Path) -> Result<()> {
                             let sound = !silent && now >= state.silenced_until_ms;
                             let result = deliver(
                                 if critical {
-                                    "MSI PSU critical alert"
+                                    "Railwatch critical alert"
                                 } else {
-                                    "MSI PSU warning"
+                                    "Railwatch warning"
                                 },
                                 &message,
                                 critical,
@@ -208,7 +208,7 @@ pub fn run(command: NotifyCommand, runtime: &Path) -> Result<()> {
 fn deliver(title: &str, message: &str, critical: bool, sound: bool, dir: &Path) -> Result<()> {
     let notification = run_bounded(
         Command::new("notify-send").args([
-            "--app-name=MSI PSU",
+            "--app-name=Railwatch",
             "--hint=boolean:suppress-sound:true",
             "--urgency",
             if critical { "critical" } else { "normal" },

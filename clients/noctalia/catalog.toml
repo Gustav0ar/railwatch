@@ -1,11 +1,11 @@
 [[plugin]]
-id = "gustav0ar/msi-psu"
-name = "MSI PSU"
+id = "gustav0ar/railwatch"
+name = "Railwatch"
 version = "0.1.0"
 author = "Gustavo"
 license = "GPL-2.0-or-later"
 plugin_api = 9
 icon = "bolt"
-description = "MSI PSU connector monitoring, incidents and electricity costs"
+description = "Railwatch connector monitoring, incidents and electricity costs"
 tags = ["hardware", "bar", "panel", "service"]
-dependencies = ["msi-psu", "msi-psu-gui"]
+dependencies = ["railwatch", "railwatch-gui"]

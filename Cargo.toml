@@ -1,10 +1,10 @@
 [package]
-name = "msi-psu"
+name = "railwatch"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 license = "GPL-2.0-or-later"
-description = "Local MSI PSU monitoring, incident history, and energy accounting"
+description = "Local Railwatch monitoring, incident history, and energy accounting"
 
 [dependencies]
 anyhow = "1"
@@ -23,9 +23,9 @@ tempfile = "3"
 mlua = { version = "0.11", features = ["luau", "vendored"] }
 
 [[bin]]
-name = "msi-psud"
+name = "railwatchd"
 path = "src/bin/daemon.rs"
 
 [[bin]]
-name = "msi-psu"
+name = "railwatch"
 path = "src/bin/cli.rs"

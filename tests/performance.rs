@@ -44,7 +44,7 @@ fn descriptors(pid: u32) -> usize {
 }
 fn cli(dir: &Path, output: Stdio) -> Process {
     Process(
-        Command::new(env!("CARGO_BIN_EXE_msi-psu"))
+        Command::new(env!("CARGO_BIN_EXE_railwatch"))
             .arg("--runtime-dir")
             .arg(dir.join("run"))
             .arg("plugin-stream")
@@ -56,13 +56,13 @@ fn cli(dir: &Path, output: Stdio) -> Process {
 #[test]
 #[ignore = "process/resource validation; run explicitly before release"]
 fn persistent_stream_resource_budget_and_slow_consumer() {
-    let seconds: u64 = std::env::var("MSI_PSU_SOAK_SECONDS")
+    let seconds: u64 = std::env::var("RAILWATCH_SOAK_SECONDS")
         .map(|v| v.parse().expect("invalid soak duration"))
         .unwrap_or(300);
     assert!((40..=86400).contains(&seconds));
     let dir = tempfile::tempdir().unwrap();
     let daemon = Process(
-        Command::new(env!("CARGO_BIN_EXE_msi-psud"))
+        Command::new(env!("CARGO_BIN_EXE_railwatchd"))
             .args(["--simulate", "--fault-after", "0", "--runtime-dir"])
             .arg(dir.path().join("run"))
             .arg("--database")

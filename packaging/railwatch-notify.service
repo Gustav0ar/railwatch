@@ -1,10 +1,10 @@
 [Unit]
-Description=MSI PSU desktop alerts
+Description=Railwatch desktop alerts
 After=graphical-session.target
 PartOf=graphical-session.target
 
 [Service]
-ExecStart=/usr/bin/msi-psu notify run
+ExecStart=/usr/bin/railwatch notify run
 Restart=on-failure
 RestartSec=3
 

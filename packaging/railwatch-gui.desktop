@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
-Name=MSI PSU
+Name=Railwatch
 Comment=PSU connector monitoring and electricity costs
-Exec=msi-psu-gui
+Exec=railwatch-gui
 Icon=utilities-system-monitor
 Categories=System;Monitor;
 Terminal=false

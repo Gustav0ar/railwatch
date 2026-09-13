@@ -1,5 +1,5 @@
 # Local API v1. Integer sensor values use SI milli/micro units; timestamps are Unix ms.
-interface io.github.msipsu.Monitor1
+interface io.github.railwatch.Monitor1
 method Snapshot() -> (snapshot: object, age_ms: ?int, stale: bool)
 method Watch() -> (snapshot: object, age_ms: ?int, stale: bool)
 method Devices() -> (current: ?object, recorded: []object)

@@ -1,4 +1,4 @@
-use msi_psu::{
+use railwatch::{
     device::simulated_sample,
     history::{History, Tariff},
 };
