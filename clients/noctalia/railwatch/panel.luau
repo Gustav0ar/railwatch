@@ -18,7 +18,7 @@ local function connector(currents, index)
     end
     local deviation = 0
     if total > 0 then for _, current in ipairs(currents) do deviation = math.max(deviation, math.abs(current * 6 - total) * 100 / total) end end
-    return ui.column({gap = 14, flexGrow = 1}, {label("Connector " .. tostring(index), 20), ui.row({gap = 10}, pins), label(total == 0 and "No load observed" or string.format("%.3f A total · %.1f%% deviation", total / 1000, deviation), 14)})
+    return ui.column({gap = 8, flexGrow = 1}, {label("Connector " .. tostring(index), 20), ui.row({gap = 10}, pins), label(total == 0 and "No load observed" or string.format("%.3f A total · %.1f%% deviation", total / 1000, deviation), 14)})
 end
 local function openGui(incident)
     local command = "railwatch-gui"
@@ -45,7 +45,7 @@ local function render()
         local connectors = {}
         for index, currents in ipairs(t.connector_currents_ma or {}) do table.insert(connectors, connector(currents, index)) end
         table.insert(children, ui.row({gap = 28}, connectors))
-        table.insert(children, ui.graph({values = series, color = stale and "#777777" or "#70b7ff", height = 80, fillOpacity = 0, lineWidth = 2}))
+        table.insert(children, ui.graph({values = series, color = stale and "#777777" or "#70b7ff", height = 48, fillOpacity = 0, lineWidth = 2}))
     end
     if history then
         local buckets = history.energy and history.energy.buckets or {}
@@ -62,7 +62,7 @@ local function render()
         if index > 4 then break end
         table.insert(children, ui.row({justify = "space_between", gap = 12}, {label(incident.message, 14, incident.severity == "critical" and "#ff8096" or "#f4c570"), ui.button({text = incident.recovered_at_ms and "Recovered" or "View incident", controlSize = "sm", onClick = function() openGui(incident.id) end})}))
     end
-    panel.render(ui.scroll({padding = 24, gap = 18, fill = "#000000", flexGrow = 1}, children))
+    panel.render(ui.scroll({padding = 16, gap = 6, fill = "#000000", flexGrow = 1}, children))
 end
 function onOpen() opened = true; render() end
 function onClose() opened = false end
